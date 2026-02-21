@@ -179,6 +179,18 @@
         <button class="polaris-btn polaris-btn--default" @click="closeStatusPanel">Cancel</button>
       </div>
     </div>
+
+    <!-- User List Popup -->
+    <NodeUserList
+      v-if="userListOpen"
+      :workflow-id="workflowMeta.id || ''"
+      :node-id="userListNodeId"
+      :node-name="userListNodeName"
+      :supabase-url="supabaseUrlData"
+      :supabase-anon-key="supabaseAnonKeyData"
+      :auth-token="authTokenData"
+      @close="closeUserList"
+    />
   </div>
 </template>
 
@@ -196,6 +208,7 @@ import WaitConfig from './components/WaitConfig.vue';
 import ApiConfig from './components/ApiConfig.vue';
 import ActionConfig from './components/ActionConfig.vue';
 import AgentConfig from './components/AgentConfig.vue';
+import NodeUserList from './components/NodeUserList.vue';
 
 // SVG Icons for node actions
 const EditIcon = () => h('svg', { 
@@ -276,6 +289,28 @@ const createNodeBody = (label, icon, badgeColor, typeSubtitle) => {
   return h('div', { class: 'node-body' }, children);
 };
 
+// Helper to create clickable stats footer on each node
+const createNodeStats = (props) => {
+  const stats = props.data?.stats;
+  const passed = stats?.unique_passed ?? null;
+  if (passed === null) return null;
+
+  const items = [
+    h('span', { class: 'node-stats__item' }, [`👤 ${passed}`]),
+  ];
+  if (stats?.currently_waiting > 0) {
+    items.push(h('span', { class: 'node-stats__item node-stats__item--waiting' }, [`⏳ ${stats.currently_waiting}`]));
+  }
+
+  return h('div', {
+    class: 'node-stats',
+    onClick: (e) => {
+      e.stopPropagation();
+      props.data?.onStatsClick?.(props.id);
+    },
+  }, items);
+};
+
 // Node icon mapping
 const nodeIconMap = {
   condition: '🔀',
@@ -338,6 +373,7 @@ const ConditionNode = {
             class: 'flow-handle flow-handle-right',
             style: { top: '65%' },
           }),
+          createNodeStats(props),
         ]
       );
   },
@@ -365,6 +401,7 @@ const MessageNode = {
             h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#10B981' } }, '✉️'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
+          createNodeStats(props),
         ]
       );
   },
@@ -392,6 +429,7 @@ const WaitNode = {
             h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#F59E0B' } }, '⏱️'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
+          createNodeStats(props),
         ]
       );
   },
@@ -419,6 +457,7 @@ const ApiNode = {
             h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#8B5CF6' } }, '🔌'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
+          createNodeStats(props),
         ]
       );
   },
@@ -447,6 +486,7 @@ const ActionNode = {
             h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#EC4899' } }, '⚡'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
+          createNodeStats(props),
         ]
       );
   },
@@ -475,6 +515,7 @@ const TriggerNode = {
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           h(Handle, { type: 'source', position: Position.Right, id: 'default', class: 'flow-handle flow-handle-right', style: { top: '70%' } }),
+          createNodeStats(props),
         ]
       );
   },
@@ -543,6 +584,7 @@ const AgentNode = {
             class: 'flow-handle flow-handle-right',
             style: { top: '65%' },
           }),
+          createNodeStats(props),
         ]
       );
   },
@@ -560,6 +602,7 @@ export default {
     ApiConfig,
     ActionConfig,
     AgentConfig,
+    NodeUserList,
   },
   props: {
     uid: { type: String, required: true },
@@ -964,6 +1007,70 @@ export default {
         name: 'exit',
         event: { is_dirty: isDirty.value },
       });
+    };
+
+    // ─── Node Stats + User List ──────────────────────────────────
+    const nodeStatsMap = ref({});
+    const userListOpen = ref(false);
+    const userListNodeId = ref('');
+    const userListNodeName = ref('');
+
+    const rpc = async (functionName, body = {}) => {
+      const url = supabaseUrlData.value?.replace(/\/+$/, '');
+      const token = authTokenData.value;
+      if (!url || !token) return null;
+      const res = await fetch(`${url}/rest/v1/rpc/${functionName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'apikey': supabaseAnonKeyData.value || token,
+        },
+        body: JSON.stringify(body),
+      });
+      return res.json();
+    };
+
+    const fetchNodeStats = async () => {
+      const wfId = props.content?.initialWorkflow?.id;
+      if (!wfId || !supabaseUrlData.value) return;
+      try {
+        const data = await rpc('bff_get_amp_workflow_node_stats', { p_workflow_id: wfId });
+        if (data?.success !== false && Array.isArray(data?.nodes)) {
+          const map = {};
+          data.nodes.forEach(n => { map[n.node_id] = { unique_passed: n.unique_passed || 0, currently_waiting: n.currently_waiting || 0 }; });
+          nodeStatsMap.value = map;
+          applyStatsToNodes();
+        }
+      } catch (err) {
+        console.error('[WorkflowBuilder] Failed to fetch node stats:', err);
+      }
+    };
+
+    const applyStatsToNodes = () => {
+      const map = nodeStatsMap.value;
+      if (!Object.keys(map).length) return;
+      nodes.value = nodes.value.map(node => ({
+        ...node,
+        data: {
+          ...node.data,
+          stats: map[node.id] || null,
+          onStatsClick: handleStatsClick,
+        },
+      }));
+    };
+
+    const handleStatsClick = (nodeId) => {
+      const node = nodes.value.find(n => n.id === nodeId);
+      userListNodeId.value = nodeId;
+      userListNodeName.value = node?.data?.label || 'Node';
+      userListOpen.value = true;
+    };
+
+    const closeUserList = () => {
+      userListOpen.value = false;
+      userListNodeId.value = '';
+      userListNodeName.value = '';
     };
 
     // Computed styles
@@ -1658,6 +1765,12 @@ export default {
           }
         }
       }, 300);
+
+      setTimeout(() => fetchNodeStats(), 500);
+
+      const statsInterval = setInterval(() => fetchNodeStats(), 30000);
+      const cleanup = () => clearInterval(statsInterval);
+      if (typeof window !== 'undefined') window.addEventListener('beforeunload', cleanup);
     });
 
     // Watch nodes array and fit view
@@ -1704,8 +1817,10 @@ export default {
             showEditAction: showEditAction.value,
             showDeleteAction: node.id === tid ? false : showDeleteAction.value,
             isTrigger: node.id === tid,
+            stats: nodeStatsMap.value[node.id] || node.data?.stats || null,
             onEdit: handleNodeEdit,
             onDelete: handleNodeDelete,
+            onStatsClick: handleStatsClick,
           },
         }));
       },
@@ -1778,6 +1893,10 @@ export default {
       handleNameChange,
       handleToolbarSave,
       handleExit,
+      userListOpen,
+      userListNodeId,
+      userListNodeName,
+      closeUserList,
       /* wwEditor:start */
       isEditing,
       /* wwEditor:end */
@@ -2153,6 +2272,35 @@ export default {
 :deep(.node-action-delete:hover) {
   background: var(--p-color-bg-fill-critical-secondary);
   color: var(--p-color-text-critical);
+}
+
+// Node stats footer
+:deep(.node-stats) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  border-top: 1px solid #F1F1F1;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  justify-content: center;
+
+  &:hover {
+    background: #F6F6F7;
+  }
+}
+
+:deep(.node-stats__item) {
+  font-size: 12px;
+  color: #8C9196;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+:deep(.node-stats__item--waiting) {
+  color: #1E40AF;
 }
 
 // Handle styles - left/right positioning
