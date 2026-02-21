@@ -117,8 +117,8 @@
         </div>
 
         <div class="config-panel__footer">
-          <button class="config-panel__btn config-panel__btn--cancel" @click="cancelConfigEdit">Cancel</button>
-          <button class="config-panel__btn config-panel__btn--save" @click="saveConfigEdit">Save</button>
+          <button class="polaris-btn polaris-btn--default" @click="cancelConfigEdit">Cancel</button>
+          <button class="polaris-btn polaris-btn--primary" @click="saveConfigEdit">Save</button>
         </div>
       </div>
     </div>
@@ -169,23 +169,19 @@
       </div>
 
       <div class="status-panel__content">
-        <div class="status-panel__field">
-          <label class="status-panel__label">Status <span class="status-panel__required">*</span></label>
-          <p class="status-panel__help">Select a status for all actions in your workflow</p>
-          <select class="status-panel__select" v-model="pendingStatus">
-            <option :value="true">
-              Live
-            </option>
-            <option :value="false">
-              Draft
-            </option>
+        <div class="polaris-form-field">
+          <label class="polaris-form-field__label">Status <span class="polaris-form-field__required">*</span></label>
+          <p class="polaris-form-field__help">Select a status for all actions in your workflow</p>
+          <select class="polaris-form-field__select" v-model="pendingStatus">
+            <option :value="true">Live</option>
+            <option :value="false">Draft</option>
           </select>
         </div>
       </div>
 
       <div class="status-panel__footer">
-        <button class="status-panel__btn status-panel__btn--primary" @click="saveStatus">Save</button>
-        <button class="status-panel__btn status-panel__btn--default" @click="closeStatusPanel">Cancel</button>
+        <button class="polaris-btn polaris-btn--primary" @click="saveStatus">Save</button>
+        <button class="polaris-btn polaris-btn--default" @click="closeStatusPanel">Cancel</button>
       </div>
     </div>
   </div>
@@ -2385,45 +2381,11 @@ export default {
 .config-panel__footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  padding: 16px;
+  gap: var(--p-space-200);
+  padding: var(--p-space-400);
   background: var(--p-color-bg-surface);
-  border-top: 1px solid var(--p-color-border);
+  border-top: var(--p-border-width-025) solid var(--p-color-border);
   flex-shrink: 0;
-}
-
-.config-panel__btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border: 1px solid var(--p-color-border);
-
-  &--cancel {
-    background: var(--p-color-bg-surface);
-    color: var(--p-color-text);
-
-    &:hover {
-      background: var(--p-color-bg-surface-hover);
-    }
-  }
-
-  &--save {
-    background: #303030;
-    color: #FFFFFF;
-    border-color: #303030;
-
-    &:hover {
-      background: #1A1A1A;
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
 }
 
 // ============================================
@@ -2458,78 +2420,15 @@ export default {
 }
 
 .status-panel__close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: var(--p-border-radius-200);
-  background: transparent;
-  color: var(--p-color-text-secondary);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--p-color-bg-surface-hover);
-    color: var(--p-color-text);
-  }
+  @include polaris-button-base;
+  @include polaris-button-plain;
+  @include polaris-button-icon-only;
 }
 
 .status-panel__content {
   flex: 1;
   padding: var(--p-space-500);
   overflow-y: auto;
-}
-
-.status-panel__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--p-space-200);
-}
-
-.status-panel__label {
-  font-size: var(--p-font-size-325);
-  font-weight: var(--p-font-weight-semibold);
-  color: var(--p-color-text);
-}
-
-.status-panel__required {
-  color: var(--p-color-text-critical);
-}
-
-.status-panel__help {
-  font-size: var(--p-font-size-300);
-  color: var(--p-color-text-secondary);
-  margin: 0;
-}
-
-.status-panel__select {
-  width: 100%;
-  padding: 10px var(--p-space-300);
-  font-size: var(--p-font-size-325);
-  line-height: var(--p-font-line-height-500);
-  border: 1px solid var(--p-color-input-border);
-  border-radius: var(--p-border-radius-200);
-  background-color: var(--p-color-input-bg-surface);
-  color: var(--p-color-text);
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236D7175' d='M6 8.825c-.2 0-.4-.1-.5-.2l-3.6-3.6c-.3-.3-.3-.8 0-1.1s.8-.3 1.1 0L6 6.925l3-3c.3-.3.8-.3 1.1 0s.3.8 0 1.1l-3.6 3.6c-.1.1-.3.2-.5.2z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
-  transition: border-color 0.1s ease, box-shadow 0.1s ease;
-
-  &:hover {
-    border-color: var(--p-color-input-border-hover);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: var(--p-color-border-focus);
-    box-shadow: 0 0 0 1px var(--p-color-border-focus);
-  }
 }
 
 .status-panel__footer {
@@ -2539,28 +2438,63 @@ export default {
   border-top: var(--p-border-width-025) solid var(--p-color-border);
 }
 
-.status-panel__btn {
-  padding: var(--p-space-200) var(--p-space-400);
-  border-radius: var(--p-border-radius-200);
-  font-size: var(--p-font-size-325);
-  font-weight: var(--p-font-weight-medium);
-  cursor: pointer;
-  transition: all 0.1s ease;
+// ============================================
+// Shared Polaris form + button classes
+// Used by config panel footer, status panel,
+// and any future panels for consistent styling.
+// ============================================
+.polaris-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-200);
+
+  &__label {
+    @include polaris-label;
+  }
+
+  &__required {
+    color: var(--p-color-text-critical);
+  }
+
+  &__help {
+    @include polaris-help-text;
+    margin: 0;
+  }
+
+  &__select {
+    @include polaris-select;
+  }
+
+  &__input {
+    @include polaris-input;
+  }
+
+  &__textarea {
+    @include polaris-textarea;
+  }
+}
+
+.polaris-btn {
+  @include polaris-button-base;
 
   &--primary {
-    background: #303030;
-    color: #FFFFFF;
-    border: var(--p-border-width-025) solid #303030;
-
-    &:hover { background: #1A1A1A; }
+    @include polaris-button-primary;
   }
 
   &--default {
-    background: var(--p-color-bg-surface);
-    color: var(--p-color-text);
-    border: var(--p-border-width-025) solid var(--p-color-border);
+    @include polaris-button-default;
+  }
 
-    &:hover { background: var(--p-color-bg-surface-hover); }
+  &--plain {
+    @include polaris-button-plain;
+  }
+
+  &--outline {
+    @include polaris-button-outline;
+  }
+
+  &--full-width {
+    @include polaris-button-full-width;
   }
 }
 
