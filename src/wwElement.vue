@@ -7,22 +7,26 @@
       :style="sidebarStyle"
     >
       <div class="node-palette">
-        <div
-          v-for="nodeType in nodeTypes"
-          :key="nodeType.type"
-          class="palette-node"
-          :style="{ '--node-color': getNodeColor(nodeType.type) }"
-          draggable="true"
-          @dragstart="onDragStart($event, nodeType.type)"
-        >
-          <div class="palette-node-icon" :style="{ background: getNodeColor(nodeType.type) }">
-            {{ nodeType.icon }}
+        <div class="palette-heading">Actions</div>
+        <div v-for="group in nodeGroups" :key="group.label" class="palette-group">
+          <div class="palette-group__label">{{ group.label }}</div>
+          <div
+            v-for="nodeType in group.nodes"
+            :key="nodeType.type"
+            class="palette-item"
+            draggable="true"
+            @dragstart="onDragStart($event, nodeType.type)"
+          >
+            <span class="palette-item__icon" :style="{ color: getNodeColor(nodeType.type) }">{{ nodeType.icon }}</span>
+            <span class="palette-item__label">{{ nodeType.label }}</span>
+            <span class="palette-item__grip">
+              <svg width="8" height="14" viewBox="0 0 8 14" fill="currentColor">
+                <circle cx="2" cy="2" r="1.2"/><circle cx="6" cy="2" r="1.2"/>
+                <circle cx="2" cy="7" r="1.2"/><circle cx="6" cy="7" r="1.2"/>
+                <circle cx="2" cy="12" r="1.2"/><circle cx="6" cy="12" r="1.2"/>
+              </svg>
+            </span>
           </div>
-          <div class="palette-node-content">
-            <span class="palette-node-title">{{ nodeType.label }}</span>
-            <span class="palette-node-desc">{{ nodeType.description }}</span>
-          </div>
-          <div class="palette-node-chevron">›</div>
         </div>
       </div>
     </div>
@@ -548,14 +552,29 @@ export default {
       },
     };
 
-    // Node palette configuration - Shopify Flow style with icons and descriptions
-    const nodeTypes = [
-      { type: 'condition', label: 'Condition', icon: '🔀', description: 'Branch based on conditions' },
-      { type: 'action', label: 'Action', icon: '⚡', description: 'Perform an action or operation' },
-      { type: 'message', label: 'Message', icon: '✉️', description: 'Send message to customer' },
-      { type: 'wait', label: 'Wait', icon: '⏱️', description: 'Wait for a set amount of time' },
-      { type: 'api', label: 'API Call', icon: '🔌', description: 'Send HTTP request to service' },
-      { type: 'agent', label: 'Agent', icon: '🤖', description: 'AI-powered decision' },
+    // Node palette grouped by category
+    const nodeGroups = [
+      {
+        label: 'Messages',
+        nodes: [
+          { type: 'message', label: 'Message', icon: '✉️' },
+        ],
+      },
+      {
+        label: 'Actions',
+        nodes: [
+          { type: 'action', label: 'Action', icon: '⚡' },
+          { type: 'api', label: 'API call', icon: '🔌' },
+        ],
+      },
+      {
+        label: 'Logic',
+        nodes: [
+          { type: 'wait', label: 'Time delay', icon: '⏱️' },
+          { type: 'condition', label: 'Conditional split', icon: '🔀' },
+          { type: 'agent', label: 'AI Agent', icon: '🤖' },
+        ],
+      },
     ];
 
     // Workflow metadata from props
@@ -1580,7 +1599,7 @@ export default {
       vueFlowRef,
       nodes,
       edges,
-      nodeTypes,
+      nodeGroups,
       customNodeTypes,
       defaultEdgeOptions,
       isReadOnly,
@@ -1639,90 +1658,93 @@ export default {
   position: relative;
 }
 
-// Sidebar - Shopify Flow style
+// Sidebar
 .sidebar {
   grid-column: 1;
   padding: 0;
-  background: #FFFFFF;
+  background: var(--p-color-bg-surface);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  border-right: 1px solid #E1E3E5;
-  width: 280px;
+  border-right: var(--p-border-width-025) solid var(--p-color-border);
+  width: 240px;
 }
 
-// Node palette layout
+// Node palette
 .node-palette {
   display: flex;
   flex-direction: column;
+  padding: var(--p-space-400) 0;
 }
 
-// Palette nodes - Shopify Flow action list style
-.palette-node {
+.palette-heading {
+  font-size: var(--p-font-size-350);
+  font-weight: var(--p-font-weight-bold);
+  color: var(--p-color-text);
+  padding: 0 var(--p-space-400) var(--p-space-200);
+}
+
+.palette-group {
+  &__label {
+    font-size: var(--p-font-size-275);
+    font-weight: var(--p-font-weight-medium);
+    color: var(--p-color-text-secondary);
+    padding: var(--p-space-300) var(--p-space-400) var(--p-space-100);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+}
+
+.palette-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: #FFFFFF;
-  border: none;
-  border-bottom: 1px solid #F1F1F1;
+  gap: var(--p-space-300);
+  padding: var(--p-space-200) var(--p-space-400);
   cursor: grab;
-  transition: background 0.15s ease;
+  transition: background 0.1s ease;
+  border-radius: 0;
+  min-height: 40px;
 
   &:hover {
-    background: #F6F6F7;
+    background: var(--p-color-bg-surface-hover);
+
+    .palette-item__grip {
+      opacity: 1;
+    }
   }
 
   &:active {
     cursor: grabbing;
-    background: #EDEEEF;
+    background: var(--p-color-bg-surface-active);
   }
 
-  &:last-child {
-    border-bottom: none;
+  &__icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
   }
-}
 
-// Icon box on the left
-.palette-node-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
+  &__label {
+    flex: 1;
+    font-size: var(--p-font-size-325);
+    font-weight: var(--p-font-weight-regular);
+    color: var(--p-color-text);
+    line-height: var(--p-font-line-height-400);
+  }
 
-.palette-node-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.palette-node-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #202223;
-  line-height: 1.3;
-}
-
-.palette-node-desc {
-  font-size: 13px;
-  font-weight: 400;
-  color: #6D7175;
-  line-height: 1.4;
-}
-
-// Chevron on the right
-.palette-node-chevron {
-  font-size: 20px;
-  color: #8C9196;
-  font-weight: 300;
-  flex-shrink: 0;
+  &__grip {
+    flex-shrink: 0;
+    color: var(--p-color-icon-secondary);
+    opacity: 0;
+    transition: opacity 0.1s ease;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--p-space-050);
+  }
 }
 
 // Canvas container
