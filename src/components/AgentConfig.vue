@@ -60,6 +60,16 @@
       <span class="polaris-form-field__help">How many actions the AI can take in a single run</span>
     </div>
 
+    <!-- Constraints -->
+    <div class="polaris-form-field">
+      <label class="polaris-form-field__label">Constraints</label>
+      <span class="polaris-form-field__help">Rules that limit what this specific node can do</span>
+      <ConstraintBuilder
+        :constraints="config?.constraints || []"
+        @update="updateField('constraints', $event)"
+      />
+    </div>
+
     <!-- Context Hint -->
     <div class="polaris-form-field">
       <label class="polaris-form-field__label">Context Hint</label>
@@ -91,6 +101,7 @@
 
 <script>
 import { ref } from 'vue';
+import ConstraintBuilder from './ConstraintBuilder.vue';
 
 const OBJECTIVES = [
   { value: 're_engage', label: 'Re-engage', tooltip: 'Bring back inactive users' },
@@ -129,6 +140,7 @@ const AGENT_VARS = [
 
 export default {
   name: 'AgentConfig',
+  components: { ConstraintBuilder },
   props: {
     config: { type: Object, required: true },
   },

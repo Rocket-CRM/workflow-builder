@@ -4,28 +4,10 @@
     <section class="settings-section">
       <h3 class="settings-section__title">Constraints</h3>
       <p class="settings-section__help">Rules that limit how often or how much the workflow can act</p>
-
-      <div class="constraint-list">
-        <div v-for="(rule, idx) in localConfig.constraints" :key="idx" class="constraint-row">
-          <span class="constraint-row__prefix">No more than</span>
-          <input class="constraint-row__number" type="number" min="1" :value="rule.limit" @input="updateConstraint(idx, 'limit', parseInt($event.target.value) || 1)" />
-          <select class="constraint-row__select" :value="rule.metric" @change="updateConstraint(idx, 'metric', $event.target.value)">
-            <option value="actions">actions</option>
-            <option value="cost">cost (units)</option>
-          </select>
-          <select class="constraint-row__select" :value="rule.scope" @change="updateConstraint(idx, 'scope', $event.target.value)">
-            <option value="per_user">per user</option>
-            <option value="per_workflow">per workflow</option>
-          </select>
-          <select class="constraint-row__select" :value="rule.period" @change="updateConstraint(idx, 'period', $event.target.value)">
-            <option value="per_day">per day</option>
-            <option value="per_week">per week</option>
-            <option value="per_month">per month</option>
-          </select>
-          <button class="constraint-row__remove" @click="removeConstraint(idx)">✕</button>
-        </div>
-      </div>
-      <button class="polaris-btn polaris-btn--plain" @click="addConstraint">+ Add rule</button>
+      <ConstraintBuilder
+        :constraints="localConfig.constraints"
+        @update="handleConstraintsUpdate"
+      />
     </section>
 
     <!-- ═══ QUIET HOURS ═══ -->
@@ -104,6 +86,7 @@
 
 <script>
 import { reactive, watch } from 'vue';
+import ConstraintBuilder from './ConstraintBuilder.vue';
 
 const TIMEZONES = [
   'Asia/Bangkok', 'Asia/Singapore', 'Asia/Tokyo', 'Asia/Shanghai',
@@ -120,6 +103,7 @@ const OUTCOMES = [
 
 export default {
   name: 'WorkflowSettings',
+  components: { ConstraintBuilder },
   props: {
     config: { type: Object, default: () => ({}) },
   },
@@ -145,21 +129,9 @@ export default {
     };
 
     // Constraints
-    const addConstraint = () => {
-      localConfig.constraints.push({ metric: 'actions', limit: 3, scope: 'per_user', period: 'per_week' });
+    const handleConstraintsUpdate = (newConstraints) => {
+      localConfig.constraints = newConstraints;
       emitConfig();
-    };
-
-    const removeConstraint = (idx) => {
-      localConfig.constraints.splice(idx, 1);
-      emitConfig();
-    };
-
-    const updateConstraint = (idx, field, value) => {
-      if (localConfig.constraints[idx]) {
-        localConfig.constraints[idx][field] = value;
-        emitConfig();
-      }
     };
 
     // Quiet Hours
@@ -196,7 +168,7 @@ export default {
 
     return {
       TIMEZONES, OUTCOMES, localConfig,
-      addConstraint, removeConstraint, updateConstraint,
+      handleConstraintsUpdate,
       updateQuietHours,
       addBlackoutDate, removeBlackoutDate, formatDate,
       updateKpi,
@@ -248,56 +220,6 @@ export default {
   @include polaris-button-base;
   font-size: var(--p-font-size-300);
   &--plain { @include polaris-button-plain; }
-}
-
-// Constraints
-.constraint-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--p-space-200);
-}
-
-.constraint-row {
-  display: flex;
-  align-items: center;
-  gap: var(--p-space-150);
-  flex-wrap: wrap;
-  padding: var(--p-space-200);
-  background: var(--p-color-bg-surface-secondary);
-  border: 1px solid var(--p-color-border);
-  border-radius: var(--p-border-radius-200);
-
-  &__prefix {
-    font-size: var(--p-font-size-300);
-    color: var(--p-color-text-secondary);
-    white-space: nowrap;
-  }
-
-  &__number {
-    @include polaris-input;
-    width: 64px;
-    font-size: var(--p-font-size-300);
-    text-align: center;
-  }
-
-  &__select {
-    @include polaris-select;
-    font-size: var(--p-font-size-275);
-    width: auto;
-    min-width: 0;
-    padding-right: 24px;
-  }
-
-  &__remove {
-    border: none;
-    background: none;
-    color: var(--p-color-text-critical);
-    cursor: pointer;
-    font-size: 14px;
-    padding: 2px 4px;
-    margin-left: auto;
-    &:hover { opacity: 0.7; }
-  }
 }
 
 // Quiet hours
