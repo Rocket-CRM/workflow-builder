@@ -86,8 +86,17 @@
         </div>
 
         <div class="config-panel__content">
+          <TriggerConfig
+            v-if="isEditingTrigger"
+            :config="editingConfig"
+            :collections="collectionsData"
+            :supabase-url="supabaseUrlData"
+            :supabase-anon-key="supabaseAnonKeyData"
+            :auth-token="authTokenData"
+            @update="handleConfigUpdate"
+          />
           <ConditionConfig
-            v-if="editingNodeType === 'condition'"
+            v-else-if="editingNodeType === 'condition'"
             :config="editingConfig"
             :collections="collectionsData"
             @update="handleConfigUpdate"
@@ -290,6 +299,7 @@ import WaitConfig from './components/WaitConfig.vue';
 import ApiConfig from './components/ApiConfig.vue';
 import ActionConfig from './components/ActionConfig.vue';
 import AgentConfig from './components/AgentConfig.vue';
+import TriggerConfig from './components/TriggerConfig.vue';
 import NodeUserList from './components/NodeUserList.vue';
 import WorkflowSettings from './components/WorkflowSettings.vue';
 import {
@@ -692,6 +702,7 @@ export default {
     ApiConfig,
     ActionConfig,
     AgentConfig,
+    TriggerConfig,
     NodeUserList,
     WorkflowSettings,
     PolarisButton,
@@ -978,7 +989,26 @@ export default {
       const config = editingConfig.value;
       const nodeType = editingNodeType.value;
 
-      if (nodeType === 'condition') {
+      if (nodeType === 'trigger' || (nodeType === 'condition' && editingNodeIdLocal.value === triggerNodeId.value)) {
+        const et = config?.entry_type || 'condition';
+        if (et === 'audience') {
+          if (!config?.audience_id) errors.push('Audience is required');
+        } else {
+          const groups = config?.groups || [];
+          if (groups.length === 0) errors.push('At least one condition group is required');
+          groups.forEach((group, gIdx) => {
+            if (!group?.collection) errors.push(`Group ${gIdx + 1}: Collection is required`);
+            const groupType = group?.type || 'simple';
+            if (groupType === 'simple') {
+              const conditions = group?.conditions || [];
+              if (conditions.length === 0) errors.push(`Group ${gIdx + 1}: At least one condition is required`);
+              conditions.forEach((condition, cIdx) => {
+                if (!condition?.field) errors.push(`Group ${gIdx + 1}, Condition ${cIdx + 1}: Field is required`);
+              });
+            }
+          });
+        }
+      } else if (nodeType === 'condition') {
         const groups = config?.groups || [];
         if (groups.length === 0) errors.push('At least one condition group is required');
         groups.forEach((group, gIdx) => {
@@ -1311,6 +1341,8 @@ export default {
     const isReadOnly = computed(() => props.content?.readOnly === true);
 
     const triggerNodeId = computed(() => {
+      const triggerTypeNode = nodes.value.find(n => n.type === 'trigger');
+      if (triggerTypeNode) return triggerTypeNode.id;
       const targetIds = new Set(edges.value.map(e => e.target));
       const entry = nodes.value.find(n => n.type === 'condition' && !targetIds.has(n.id));
       return entry?.id || '';
@@ -1375,7 +1407,7 @@ export default {
       }
 
       const defaults = {
-        trigger: { label: 'New Trigger', event: null },
+        trigger: { label: 'Entry Trigger', entry_type: 'condition', match: 'all', groups: [] },
         condition: { label: 'New Condition', groups_operator: 'AND', groups: [] },
         action: { label: 'New Action', action_type: null },
         message: { label: 'New Message', channel: null, template_id: null, subject: '', content: '', json_content: null },
@@ -1989,7 +2021,7 @@ export default {
       setTimeout(() => {
         if (nodes.value.length === 0 && !isReadOnly.value && !autoTriggerCreated.value) {
           autoTriggerCreated.value = true;
-          const newNode = addNode('condition', 250, 200, null, 'Trigger');
+          const newNode = addNode('trigger', 250, 200, null, 'Entry Trigger');
           if (newNode) {
             nodes.value = nodes.value.map(n => {
               if (n.id === newNode.id) {
