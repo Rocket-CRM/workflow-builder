@@ -344,6 +344,18 @@
         />
       </template>
 
+      <!-- ═══ ADD TO / REMOVE FROM AUDIENCE ═══ -->
+      <template v-if="config?.action_type === 'add_to_audience' || config?.action_type === 'remove_from_audience'">
+        <PolarisSelect
+          label="Audience"
+          required
+          :modelValue="config?.audience_id || ''"
+          @update:modelValue="updateField('audience_id', $event)"
+          :options="audienceOptions"
+          :placeholder="config?.action_type === 'add_to_audience' ? 'Select audience to add to...' : 'Select audience to remove from...'"
+        />
+      </template>
+
       <!-- ═══ VARIABLE REFERENCE ═══ -->
       <div v-if="activeType" class="variable-ref">
         <button class="variable-ref__toggle" @click="showVariables = !showVariables">
@@ -401,6 +413,13 @@ const ACTION_GROUPS = [
     ],
   },
   {
+    label: 'Audience',
+    actions: [
+      { value: 'add_to_audience', label: 'Add to Audience' },
+      { value: 'remove_from_audience', label: 'Remove from Audience' },
+    ],
+  },
+  {
     label: 'Integration',
     actions: [
       { value: 'api_call', label: 'API Call / Webhook' },
@@ -418,6 +437,8 @@ const ACTION_DEFAULTS = {
   send_line: { channel: 'line', content: '', json_content: null },
   send_sms: { channel: 'sms', message: '' },
   api_call: { method: 'POST', url: '', body: null },
+  add_to_audience: { audience_id: '' },
+  remove_from_audience: { audience_id: '' },
 };
 
 const VARS_USER = [
@@ -451,6 +472,7 @@ export default {
   },
   props: {
     config: { type: Object, required: true },
+    audiences: { type: Array, default: () => [] },
     supabaseUrl: { type: String, default: '' },
     supabaseAnonKey: { type: String, default: '' },
     authToken: { type: String, default: '' },
@@ -548,6 +570,16 @@ export default {
       return forms.value.map(f => ({
         value: f?.id,
         label: f?.form_category ? `${f?.name} (${f.form_category})` : f?.name,
+      }));
+    });
+
+    const audienceOptions = computed(() => {
+      const items = Array.isArray(props.audiences) ? props.audiences : [];
+      return items.filter(a => a?.is_active !== false).map(a => ({
+        value: a?.id,
+        label: a?.member_count != null
+          ? `${a?.name || 'Untitled'} (${Number(a.member_count).toLocaleString()} members)`
+          : a?.name || 'Untitled',
       }));
     });
 
@@ -723,6 +755,7 @@ export default {
       tagOptions,
       personaOptions,
       formOptions,
+      audienceOptions,
       jsonContentString,
       jsonError,
       bodyString,

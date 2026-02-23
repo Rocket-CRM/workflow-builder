@@ -29,31 +29,24 @@
 
     <!-- Audience mode -->
     <template v-if="entryType === 'audience'">
-      <div v-if="audiencesLoading" class="loading-state">
-        <span class="loading-state__spinner"></span>
-        <span class="loading-state__text">Loading audiences...</span>
+      <PolarisSelect
+        label="Select audience"
+        required
+        :modelValue="config?.audience_id || ''"
+        @update:modelValue="selectAudience($event)"
+        :options="audienceOptions"
+        placeholder="Choose an audience..."
+      />
+
+      <div v-if="selectedAudienceInfo" class="audience-info">
+        <span class="audience-info__name">{{ selectedAudienceInfo.name }}</span>
+        <span v-if="selectedAudienceInfo.description" class="audience-info__desc">{{ selectedAudienceInfo.description }}</span>
+        <span class="audience-info__count">{{ formatCount(selectedAudienceInfo.member_count) }} members</span>
       </div>
 
-      <template v-else>
-        <PolarisSelect
-          label="Select audience"
-          required
-          :modelValue="config?.audience_id || ''"
-          @update:modelValue="selectAudience($event)"
-          :options="audienceOptions"
-          placeholder="Choose an audience..."
-        />
-
-        <div v-if="selectedAudienceInfo" class="audience-info">
-          <span class="audience-info__name">{{ selectedAudienceInfo.name }}</span>
-          <span v-if="selectedAudienceInfo.description" class="audience-info__desc">{{ selectedAudienceInfo.description }}</span>
-          <span class="audience-info__count">{{ formatCount(selectedAudienceInfo.member_count) }} members</span>
-        </div>
-
-        <PolarisBanner v-if="activeAudiences.length === 0 && !audiencesLoading" variant="info">
-          No active audiences found. Create an audience first, then come back to set up this trigger.
-        </PolarisBanner>
-      </template>
+      <PolarisBanner v-if="activeAudiences.length === 0" variant="info">
+        No active audiences found. Create an audience first, then come back to set up this trigger.
+      </PolarisBanner>
     </template>
 
     <!-- Custom condition mode -->
@@ -68,7 +61,7 @@
 </template>
 
 <script>
-import { computed, ref, watch, onMounted } from 'vue';
+import { computed } from 'vue';
 import ConditionConfig from './ConditionConfig.vue';
 import {
   PolarisSelect,
@@ -81,19 +74,14 @@ export default {
   props: {
     config: { type: Object, required: true },
     collections: { type: Array, default: () => [] },
-    supabaseUrl: { type: String, default: '' },
-    supabaseAnonKey: { type: String, default: '' },
-    authToken: { type: String, default: '' },
+    audiences: { type: Array, default: () => [] },
   },
   emits: ['update'],
   setup(props, { emit }) {
-    const audiencesLoading = ref(false);
-    const audiences = ref([]);
-
     const entryType = computed(() => props.config?.entry_type || 'condition');
 
     const activeAudiences = computed(() => {
-      return (audiences.value || []).filter(a => a?.is_active === true);
+      return (props.audiences || []).filter(a => a?.is_active === true);
     });
 
     const audienceOptions = computed(() => {
@@ -106,7 +94,7 @@ export default {
     const selectedAudienceInfo = computed(() => {
       const id = props.config?.audience_id;
       if (!id) return null;
-      return audiences.value.find(a => a?.id === id) || null;
+      return (props.audiences || []).find(a => a?.id === id) || null;
     });
 
     const conditionConfig = computed(() => {
@@ -123,42 +111,6 @@ export default {
       if (n == null) return '0';
       return Number(n).toLocaleString();
     };
-
-    const rpc = async (functionName, body = {}) => {
-      const url = props.supabaseUrl?.replace(/\/+$/, '');
-      if (!url || !props.authToken) return null;
-      const res = await fetch(`${url}/rest/v1/rpc/${functionName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${props.authToken}`,
-          'apikey': props.supabaseAnonKey || props.authToken,
-        },
-        body: JSON.stringify(body),
-      });
-      return res.json();
-    };
-
-    const fetchAudiences = async () => {
-      if (!props.supabaseUrl || !props.authToken) return;
-      audiencesLoading.value = true;
-      try {
-        const data = await rpc('bff_list_audiences');
-        if (Array.isArray(data)) {
-          audiences.value = data;
-        } else if (data?.audiences) {
-          audiences.value = data.audiences;
-        }
-      } catch (err) {
-        console.error('[TriggerConfig] Failed to fetch audiences:', err);
-      } finally {
-        audiencesLoading.value = false;
-      }
-    };
-
-    onMounted(() => {
-      fetchAudiences();
-    });
 
     const switchEntryType = (type) => {
       if (type === 'audience') {
@@ -197,8 +149,6 @@ export default {
     };
 
     return {
-      audiencesLoading,
-      audiences,
       entryType,
       activeAudiences,
       audienceOptions,
@@ -260,9 +210,7 @@ export default {
     flex-shrink: 0;
   }
 
-  &:hover {
-    background: var(--p-color-bg-surface-hover);
-  }
+  &:hover { background: var(--p-color-bg-surface-hover); }
 
   &--active {
     border-color: var(--p-color-border-brand);
@@ -276,11 +224,7 @@ export default {
     flex: 1;
   }
 
-  &__icon {
-    font-size: 18px;
-    flex-shrink: 0;
-    line-height: 1.2;
-  }
+  &__icon { font-size: 18px; flex-shrink: 0; line-height: 1.2; }
 
   &__title {
     display: block;
@@ -322,29 +266,5 @@ export default {
     color: var(--p-color-text-brand);
     font-weight: var(--p-font-weight-medium);
   }
-}
-
-.loading-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--p-space-200);
-  padding: var(--p-space-500);
-  color: var(--p-color-text-secondary);
-
-  &__text { font-size: var(--p-font-size-300); }
-
-  &__spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--p-color-border);
-    border-top-color: var(--p-color-text-brand);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 </style>

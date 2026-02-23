@@ -90,9 +90,7 @@
             v-if="isEditingTrigger"
             :config="editingConfig"
             :collections="collectionsData"
-            :supabase-url="supabaseUrlData"
-            :supabase-anon-key="supabaseAnonKeyData"
-            :auth-token="authTokenData"
+            :audiences="audiencesData"
             @update="handleConfigUpdate"
           />
           <ConditionConfig
@@ -121,6 +119,7 @@
         <ActionConfig
           v-else-if="editingNodeType === 'action'"
           :config="editingConfig"
+          :audiences="audiencesData"
           :supabase-url="supabaseUrlData"
           :supabase-anon-key="supabaseAnonKeyData"
           :auth-token="authTokenData"
@@ -129,6 +128,7 @@
           <AgentConfig
             v-else-if="editingNodeType === 'agent'"
             :config="editingConfig"
+            :agents="agentsData"
             @update="handleConfigUpdate"
           />
 
@@ -915,6 +915,8 @@ export default {
       { value: 'push', label: 'Push Notification' },
     ]);
     const messageTemplatesData = computed(() => props.content?.messageTemplates || []);
+    const audiencesData = computed(() => props.content?.audiences || []);
+    const agentsData = computed(() => props.content?.agents || []);
     const supabaseUrlData = computed(() => props.content?.supabaseUrl || '');
     const supabaseAnonKeyData = computed(() => props.content?.supabaseAnonKey || '');
     const authTokenData = computed(() => props.content?.authToken || '');
@@ -1051,9 +1053,9 @@ export default {
         if (at === 'send_line' && !config?.content) errors.push('Message content is required');
         if (at === 'send_sms' && !config?.message) errors.push('Message is required');
         if (at === 'api_call' && !config?.url) errors.push('URL is required');
-        if (at === 'agent_decision' && !config?.campaign_objective) errors.push('Campaign objective is required');
+        if ((at === 'add_to_audience' || at === 'remove_from_audience') && !config?.audience_id) errors.push('Audience is required');
       } else if (nodeType === 'agent') {
-        if (!config?.campaign_objective) errors.push('Campaign objective is required');
+        if (!config?.agent_config_id) errors.push('Agent is required');
       }
 
       setConfigValidationErrors(errors);
@@ -1413,7 +1415,7 @@ export default {
         message: { label: 'New Message', channel: null, template_id: null, subject: '', content: '', json_content: null },
         wait: { label: 'New Wait', duration: 1, unit: 'days' },
         api: { label: 'New API Call', method: 'POST', url: '', headers: {}, body: '', timeout_seconds: 30, retry_count: 2 },
-        agent: { label: 'New Agent', campaign_objective: '', use_groq: true },
+        agent: { label: 'New Agent', agent_config_id: '' },
       };
       return defaults[type] || { label: label || `New ${type}` };
     };
@@ -2156,6 +2158,8 @@ export default {
       collectionsData,
       channelsData,
       messageTemplatesData,
+      audiencesData,
+      agentsData,
       supabaseUrlData,
       supabaseAnonKeyData,
       authTokenData,

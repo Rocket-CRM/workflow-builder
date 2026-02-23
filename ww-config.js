@@ -24,6 +24,8 @@ export default {
       'showEditAction',
       'showDeleteAction',
       'collections',
+      'audiences',
+      'agents',
       'channels',
       'messageTemplates',
       'supabaseUrl',
@@ -285,6 +287,7 @@ export default {
                 type: 'TextSelect',
                 options: {
                   options: [
+                    { value: 'trigger', label: 'Trigger' },
                     { value: 'condition', label: 'Condition' },
                     { value: 'message', label: 'Message' },
                     { value: 'wait', label: 'Wait' },
@@ -505,6 +508,42 @@ export default {
       },
       propertyHelp:
         'Used by Message node config panel for template selection. Each template should have id, name, channel, and content.',
+      /* wwEditor:end */
+    },
+    audiences: {
+      label: { en: 'Audiences' },
+      type: 'Info',
+      section: 'settings',
+      options: {
+        text: { en: 'Bind audiences from bff_list_audiences() → data' },
+      },
+      bindable: true,
+      defaultValue: [],
+      /* wwEditor:start */
+      bindingValidation: {
+        type: 'array',
+        tooltip: 'Array of audiences: [{id, name, description, is_active, member_count}]',
+      },
+      propertyHelp:
+        'Used by Trigger node (audience entry mode) and Action node (add/remove from audience). Bind to bff_list_audiences → data.',
+      /* wwEditor:end */
+    },
+    agents: {
+      label: { en: 'Agents' },
+      type: 'Info',
+      section: 'settings',
+      options: {
+        text: { en: 'Bind agents from bff_list_agents() → data' },
+      },
+      bindable: true,
+      defaultValue: [],
+      /* wwEditor:start */
+      bindingValidation: {
+        type: 'array',
+        tooltip: 'Array of agents: [{id, name, objective, tone, action_count, outcome_count}]',
+      },
+      propertyHelp:
+        'Used by Agent node config panel. Bind to bff_list_agents → data.',
       /* wwEditor:end */
     },
     supabaseUrl: {
