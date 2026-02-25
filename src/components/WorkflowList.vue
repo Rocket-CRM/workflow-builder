@@ -223,9 +223,9 @@ export default {
     white-space: nowrap;
     position: sticky;
     top: 0;
-    background: var(--p-color-bg-surface);
+    background: var(--p-color-bg-surface-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
 
     &:first-child { border-top-left-radius: var(--p-border-radius-300); }
     &:last-child { border-top-right-radius: var(--p-border-radius-300); }
@@ -306,7 +306,7 @@ export default {
   &__slider {
     width: 36px;
     height: 20px;
-    background: var(--p-color-bg-fill-secondary);
+    background: var(--p-color-bg-fill-disabled);
     border-radius: 10px;
     position: relative;
     transition: background 0.2s;
@@ -327,7 +327,7 @@ export default {
   }
 
   input:checked + &__slider {
-    background: #22C55E;
+    background: var(--p-color-bg-fill-success);
 
     &::after { transform: translateX(16px); }
   }

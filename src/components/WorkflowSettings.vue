@@ -2,11 +2,8 @@
   <div class="wf-settings">
     <!-- ═══ CONSTRAINTS ═══ -->
     <PolarisCard>
+      <PolarisCardHeader title="Constraints" description="Rules that limit how often or how much the workflow can act" />
       <PolarisCardSection>
-        <div class="section-header">
-          <h3 class="section-header__title">Constraints</h3>
-          <p class="section-header__help">Rules that limit how often or how much the workflow can act</p>
-        </div>
         <ConstraintBuilder
           :constraints="localConfig.constraints"
           @update="handleConstraintsUpdate"
@@ -16,8 +13,8 @@
 
     <!-- ═══ QUIET HOURS ═══ -->
     <PolarisCard>
+      <PolarisCardHeader title="Quiet Hours" />
       <PolarisCardSection>
-        <h3 class="section-header__title">Quiet Hours</h3>
       <label class="toggle-row">
         <input type="checkbox" :checked="localConfig.quiet_hours?.enabled" @change="updateQuietHours('enabled', $event.target.checked)" />
         <span>Enable quiet hours</span>
@@ -50,11 +47,8 @@
 
     <!-- ═══ BLACKOUT DATES ═══ -->
     <PolarisCard>
+      <PolarisCardHeader title="Blackout Dates" description="Dates when the AI agent will not execute any actions" />
       <PolarisCardSection>
-        <div class="section-header">
-          <h3 class="section-header__title">Blackout Dates</h3>
-          <p class="section-header__help">Dates when the AI agent will not execute any actions</p>
-        </div>
 
       <div class="blackout-tags">
         <span v-for="(date, idx) in (localConfig.blackout_dates || [])" :key="date" class="blackout-tag">
@@ -74,8 +68,8 @@
 
     <!-- ═══ CAMPAIGN KPI ═══ -->
     <PolarisCard>
+      <PolarisCardHeader title="Campaign KPI" />
       <PolarisCardSection>
-        <h3 class="section-header__title">Campaign KPI</h3>
 
       <PolarisSelect
         label="Desired Outcome"
@@ -112,6 +106,7 @@ import {
   PolarisTextField,
   PolarisSelect,
   PolarisCard,
+  PolarisCardHeader,
   PolarisCardSection,
 } from 'polaris-weweb-styles/components';
 
@@ -130,7 +125,7 @@ const OUTCOMES = [
 
 export default {
   name: 'WorkflowSettings',
-  components: { ConstraintBuilder, PolarisTextField, PolarisSelect, PolarisCard, PolarisCardSection },
+  components: { ConstraintBuilder, PolarisTextField, PolarisSelect, PolarisCard, PolarisCardHeader, PolarisCardSection },
   props: {
     config: { type: Object, default: () => ({}) },
   },
@@ -217,25 +212,6 @@ export default {
   gap: var(--p-space-500);
 }
 
-.section-header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--p-space-100);
-  margin-bottom: var(--p-space-200);
-
-  &__title {
-    font-size: var(--p-font-size-325);
-    font-weight: var(--p-font-weight-semibold);
-    color: var(--p-color-text);
-    margin: 0;
-  }
-
-  &__help {
-    font-size: var(--p-font-size-275);
-    color: var(--p-color-text-secondary);
-    margin: 0;
-  }
-}
 
 // Custom patterns: toggle rows, time row, blackout tags, input suffixes, KPI row
 .toggle-row {
