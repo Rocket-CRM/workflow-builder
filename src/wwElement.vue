@@ -76,11 +76,11 @@
       <div v-else-if="configPanelOpen" class="config-panel">
         <div class="config-panel__header">
           <div class="config-panel__header-left">
-          <span class="config-panel__icon" :class="`config-panel__icon--${editingNodeType}`">
-            {{ nodeIconMap[editingNodeType] || '⚙️' }}
+          <span class="config-panel__icon" :class="`config-panel__icon--${isEditingEntry ? 'entry' : editingNodeType}`">
+            {{ isEditingEntry ? '🎯' : (nodeIconMap[editingNodeType] || '⚙️') }}
             </span>
             <div class="config-panel__header-info">
-              <span class="config-panel__type-label">{{ nodeTypeLabels[editingNodeType] || 'Node' }}</span>
+              <span class="config-panel__type-label">{{ isEditingEntry ? 'Entry Condition' : (nodeTypeLabels[editingNodeType] || 'Node') }}</span>
               <input
                 v-model="editingConfig.label"
                 class="config-panel__title-input"
@@ -95,8 +95,15 @@
         </div>
 
         <div class="config-panel__content">
+          <TriggerConfig
+            v-if="isEditingEntry && editingNodeType === 'condition'"
+            :config="editingConfig"
+            :collections="collectionsData"
+            :audiences="audiencesData"
+            @update="handleConfigUpdate"
+          />
           <ConditionConfig
-            v-if="editingNodeType === 'condition'"
+            v-else-if="editingNodeType === 'condition'"
             :config="editingConfig"
             :collections="collectionsData"
             @update="handleConfigUpdate"
@@ -305,6 +312,7 @@ import WaitConfig from './components/WaitConfig.vue';
 import ApiConfig from './components/ApiConfig.vue';
 import ActionConfig from './components/ActionConfig.vue';
 import AgentConfig from './components/AgentConfig.vue';
+import TriggerConfig from './components/TriggerConfig.vue';
 import WorkflowList from './components/WorkflowList.vue';
 import NodeUserList from './components/NodeUserList.vue';
 import WorkflowSettings from './components/WorkflowSettings.vue';
@@ -676,6 +684,7 @@ export default {
     ApiConfig,
     ActionConfig,
     AgentConfig,
+    TriggerConfig,
     WorkflowList,
     NodeUserList,
     WorkflowSettings,
@@ -1027,7 +1036,26 @@ export default {
       const config = editingConfig.value;
       const nodeType = editingNodeType.value;
 
-      if (nodeType === 'condition') {
+      if (nodeType === 'condition' && isEditingEntry.value) {
+        const et = config?.entry_type || 'condition';
+        if (et === 'audience') {
+          if (!config?.audience_id) errors.push('Audience is required');
+        } else {
+          const groups = config?.groups || [];
+          if (groups.length === 0) errors.push('At least one condition group is required');
+          groups.forEach((group, gIdx) => {
+            if (!group?.collection) errors.push(`Group ${gIdx + 1}: Collection is required`);
+            const groupType = group?.type || 'simple';
+            if (groupType === 'simple') {
+              const conditions = group?.conditions || [];
+              if (conditions.length === 0) errors.push(`Group ${gIdx + 1}: At least one condition is required`);
+              conditions.forEach((condition, cIdx) => {
+                if (!condition?.field) errors.push(`Group ${gIdx + 1}, Condition ${cIdx + 1}: Field is required`);
+              });
+            }
+          });
+        }
+      } else if (nodeType === 'condition') {
         const groups = config?.groups || [];
         if (groups.length === 0) errors.push('At least one condition group is required');
         groups.forEach((group, gIdx) => {
@@ -1367,6 +1395,10 @@ export default {
       const targetIds = new Set(edges.value.map(e => e.target));
       const entry = nodes.value.find(n => n.type === 'condition' && !targetIds.has(n.id));
       return entry?.id || '';
+    });
+
+    const isEditingEntry = computed(() => {
+      return editingNodeIdLocal.value && editingNodeIdLocal.value === entryNodeId.value;
     });
 
     const rootStyle = computed(() => ({
@@ -2196,6 +2228,7 @@ export default {
       editingNodeType,
       editingNodeIdLocal,
       entryNodeId,
+      isEditingEntry,
       nodeTypeLabels,
       nodeIconMap,
       collectionsData,
@@ -2857,6 +2890,7 @@ export default {
   flex-shrink: 0;
 
   &--settings { background: #F3F4F6; }
+  &--entry { background: #E0E7FF; }
   &--condition { background: #DBEAFE; }
   &--message { background: #D1FAE5; }
   &--wait { background: #FEF3C7; }
