@@ -1,13 +1,14 @@
 import { ref, computed, watch } from 'vue';
 
+const SUPABASE_URL = 'https://wkevmsedchftztoolkmi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndrZXZtc2VkY2hmdHp0b29sa21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTM2OTgsImV4cCI6MjA2NjA4OTY5OH0.bd8ELGtX8ACmk_WCxR_tIFljwyHgD3YD4PdBDpD-kSM';
+
 /**
  * Centralized Supabase API layer for the Workflow Builder.
- * Self-fetches all required data (workflows, collections, audiences, agents, action options)
- * so the component doesn't need manual WeWeb binding for data.
- *
- * Only requires: supabaseUrl, supabaseAnonKey, authToken
+ * Self-fetches all required data (workflows, collections, audiences, agents, action options).
+ * Supabase URL and anon key are hardcoded; only authToken is required from the caller.
  */
-export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
+export function useSupabaseApi(authToken) {
   const workflows = ref([]);
   const workflowDetail = ref(null);
   const collections = ref([]);
@@ -27,27 +28,22 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
 
   const errors = ref({});
 
-  const getUrl = () => supabaseUrl.value?.replace(/\/+$/, '') || '';
   const getToken = () => authToken.value || '';
-  const getAnonKey = () => supabaseAnonKey.value || authToken.value || '';
 
-  const isReady = computed(() => {
-    return !!(getUrl() && getToken());
-  });
+  const isReady = computed(() => !!getToken());
 
-  // ─── Core fetch helpers ──────────────────────────────────────
+  // ─── Core fetch helpers ────────────────────────────────
 
   const rpc = async (functionName, body = {}) => {
-    const url = getUrl();
     const token = getToken();
-    if (!url || !token) return null;
+    if (!token) return null;
 
-    const res = await fetch(`${url}/rest/v1/rpc/${functionName}`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functionName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
-        'apikey': getAnonKey(),
+        'apikey': SUPABASE_ANON_KEY,
       },
       body: JSON.stringify(body),
     });
@@ -61,14 +57,13 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
   };
 
   const postgrest = async (table, query = '') => {
-    const url = getUrl();
     const token = getToken();
-    if (!url || !token) return null;
+    if (!token) return null;
 
-    const res = await fetch(`${url}/rest/v1/${table}${query ? '?' + query : ''}`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query ? '?' + query : ''}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'apikey': getAnonKey(),
+        'apikey': SUPABASE_ANON_KEY,
       },
     });
 
@@ -81,11 +76,10 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
   };
 
   const edgeFunction = async (functionName, body = {}) => {
-    const url = getUrl();
     const token = getToken();
-    if (!url || !token) return null;
+    if (!token) return null;
 
-    const res = await fetch(`${url}/functions/v1/${functionName}`, {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${functionName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -102,7 +96,7 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     return res.json();
   };
 
-  // ─── Workflow List ────────────────────────────────────────────
+  // ─── Workflow List ────────────────────────────────────
 
   const fetchWorkflows = async () => {
     if (!isReady.value) return;
@@ -124,7 +118,7 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     }
   };
 
-  // ─── Workflow Full Detail (nodes + edges) ─────────────────────
+  // ─── Workflow Full Detail (nodes + edges) ─────────────────
 
   const fetchWorkflowDetail = async (workflowId) => {
     if (!isReady.value || !workflowId) return null;
@@ -143,7 +137,7 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     }
   };
 
-  // ─── Collections (for condition builder) ──────────────────────
+  // ─── Collections (for condition builder) ──────────────────
 
   const fetchCollections = async () => {
     if (!isReady.value) return;
@@ -164,7 +158,7 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     }
   };
 
-  // ─── Audiences ────────────────────────────────────────────────
+  // ─── Audiences ────────────────────────────────────────
 
   const fetchAudiences = async () => {
     if (!isReady.value) return;
@@ -185,7 +179,7 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     }
   };
 
-  // ─── Agents ───────────────────────────────────────────────────
+  // ─── Agents ───────────────────────────────────────────
 
   const fetchAgents = async () => {
     if (!isReady.value) return;
@@ -226,10 +220,10 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     }
   };
 
-  // ─── Save Workflow (upsert) ───────────────────────────────────
+  // ─── Save Workflow (upsert) ─────────────────────────────
 
   const saveWorkflow = async (payload) => {
-    if (!isReady.value) throw new Error('Supabase credentials not configured');
+    if (!isReady.value) throw new Error('Auth token not configured');
     loading.value = { ...loading.value, saving: true };
     errors.value = { ...errors.value, saving: null };
     try {
@@ -244,10 +238,10 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     }
   };
 
-  // ─── Duplicate Workflow ───────────────────────────────────────
+  // ─── Duplicate Workflow ─────────────────────────────────
 
   const duplicateWorkflow = async (workflowId, newName) => {
-    if (!isReady.value) throw new Error('Supabase credentials not configured');
+    if (!isReady.value) throw new Error('Auth token not configured');
     try {
       return await rpc('bff_duplicate_amp_workflow', {
         p_workflow_id: workflowId,
@@ -259,7 +253,7 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     }
   };
 
-  // ─── Form Fields ──────────────────────────────────────────────
+  // ─── Form Fields ──────────────────────────────────────
 
   const fetchFormFields = async (formId) => {
     if (!isReady.value || !formId) return null;
@@ -271,7 +265,7 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     }
   };
 
-  // ─── Node Stats ───────────────────────────────────────────────
+  // ─── Node Stats ───────────────────────────────────────
 
   const fetchNodeStats = async (workflowId) => {
     if (!isReady.value || !workflowId) return null;
@@ -283,7 +277,7 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     }
   };
 
-  // ─── Batch Run ────────────────────────────────────────────────
+  // ─── Batch Run ────────────────────────────────────────
 
   const batchRun = async (workflowId) => {
     if (!isReady.value || !workflowId) return null;
@@ -296,7 +290,7 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
   };
 
   const batchDispatch = async (workflowId, merchantId, userIds) => {
-    if (!isReady.value) throw new Error('Supabase credentials not configured');
+    if (!isReady.value) throw new Error('Auth token not configured');
     try {
       return await edgeFunction('amp-batch-dispatch', {
         workflow_id: workflowId,
@@ -309,7 +303,7 @@ export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
     }
   };
 
-  // ─── Fetch All Reference Data ─────────────────────────────────
+  // ─── Fetch All Reference Data ─────────────────────────
 
   const fetchAllReferenceData = async () => {
     if (!isReady.value) return;
