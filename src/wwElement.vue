@@ -2435,6 +2435,8 @@ export default {
 @import 'polaris-weweb-styles';
 
 .workflow-root {
+  @include polaris-tokens;
+  font-family: var(--p-font-family-sans);
   width: 100%;
   height: 100%;
   min-height: 500px;
@@ -2442,7 +2444,6 @@ export default {
 }
 
 .workflow-builder {
-  @include polaris-tokens;
   display: grid !important;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr;
@@ -2451,7 +2452,6 @@ export default {
   height: 100%;
   min-height: 500px;
   overflow: hidden;
-  font-family: var(--p-font-family-sans);
   background: var(--p-color-bg-surface-secondary);
   position: relative;
 }
