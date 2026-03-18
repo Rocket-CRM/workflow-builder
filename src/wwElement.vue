@@ -780,11 +780,11 @@ export default {
     ];
 
     // ─── Supabase API Layer (must be before any code that references api) ──
-    const supabaseUrlData = computed(() => props.content?.supabaseUrl || '');
-    const supabaseAnonKeyData = computed(() => props.content?.supabaseAnonKey || '');
+    const supabaseUrlData = computed(() => 'https://wkevmsedchftztoolkmi.supabase.co');
+    const supabaseAnonKeyData = computed(() => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndrZXZtc2VkY2hmdHp0b29sa21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTM2OTgsImV4cCI6MjA2NjA4OTY5OH0.bd8ELGtX8ACmk_WCxR_tIFljwyHgD3YD4PdBDpD-kSM');
     const authTokenData = computed(() => props.content?.authToken || '');
 
-    const api = useSupabaseApi(supabaseUrlData, supabaseAnonKeyData, authTokenData);
+    const api = useSupabaseApi(authTokenData);
 
     // ─── List / Detail View ─────────────────────────────────────
     const { value: currentViewVar, setValue: setCurrentView } =
