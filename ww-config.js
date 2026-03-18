@@ -17,19 +17,10 @@ export default {
       'agentNodeColor',
     ],
     customSettingsPropertiesOrder: [
-      'supabaseUrl',
-      'supabaseAnonKey',
       'authToken',
       'readOnly',
       'showEditAction',
       'showDeleteAction',
-      'workflows',
-      'initialWorkflow',
-      'initialNodes',
-      'initialEdges',
-      'collections',
-      'audiences',
-      'agents',
       'channels',
       'messageTemplates',
     ],
@@ -315,168 +306,20 @@ export default {
     },
   ],
   properties: {
-    // ─── Data Binding ────────────────────────────────────────────
-    workflows: {
-      label: { en: 'Workflows List (auto-fetched)' },
-      type: 'Info',
-      section: 'settings',
-      options: {
-        text: { en: 'Auto-fetched from Supabase. Optional override if you want to provide your own list.' },
-      },
-      bindable: true,
-      defaultValue: [],
-      /* wwEditor:start */
-      bindingValidation: {
-        type: 'array',
-        tooltip: 'Auto-fetched from amp_workflow table. Optional override: [{id, name, description, is_active, ...}]',
-      },
-      propertyHelp:
-        'Auto-fetched from Supabase when credentials are provided. Bind here only to override the auto-fetched list.',
-      /* wwEditor:end */
-    },
-    initialWorkflow: {
-      label: { en: 'Workflow Data (auto-fetched)' },
-      type: 'Object',
+    // ─── Connection ──────────────────────────────────────────────
+    authToken: {
+      label: { en: 'Auth Token / JWT' },
+      type: 'Text',
       section: 'settings',
       bindable: true,
-      defaultValue: {},
+      defaultValue: '',
       /* wwEditor:start */
       bindingValidation: {
-        type: 'object',
-        tooltip: 'Auto-loaded via bff_get_amp_workflow_full when selecting a workflow. Optional override.',
+        type: 'string',
+        tooltip: 'Current admin user JWT. Bind to Supabase plugin access token.',
       },
       propertyHelp:
-        'Auto-fetched when a workflow is selected from the list. Bind here only to override or pre-load a specific workflow.',
-      /* wwEditor:end */
-    },
-    initialNodes: {
-      label: { en: 'Initial Nodes (auto-fetched)' },
-      type: 'Array',
-      section: 'settings',
-      bindable: true,
-      defaultValue: [],
-      options: {
-        expandable: true,
-        getItemLabel(item) {
-          return item?.node_name || item?.node_config?.label || item?.node_type || 'Node';
-        },
-        item: {
-          type: 'Object',
-          defaultValue: {
-            id: '',
-            node_type: 'message',
-            position_x: 100,
-            position_y: 100,
-            node_config: { label: 'New Node' },
-          },
-          options: {
-            item: {
-              id: {
-                label: { en: 'ID' },
-                type: 'Text',
-                options: { placeholder: 'Auto-generated if empty' },
-              },
-              node_type: {
-                label: { en: 'Node Type' },
-                type: 'TextSelect',
-                options: {
-                  options: [
-                    { value: 'condition', label: 'Condition' },
-                    { value: 'message', label: 'Message' },
-                    { value: 'wait', label: 'Wait' },
-                    { value: 'api', label: 'API Call' },
-                    { value: 'action', label: 'Action' },
-                    { value: 'agent', label: 'Agent' },
-                  ],
-                },
-                defaultValue: 'message',
-              },
-              position_x: {
-                label: { en: 'Position X' },
-                type: 'Number',
-                options: { min: 0, max: 5000, step: 10 },
-                defaultValue: 100,
-              },
-              position_y: {
-                label: { en: 'Position Y' },
-                type: 'Number',
-                options: { min: 0, max: 5000, step: 10 },
-                defaultValue: 100,
-              },
-              node_config: {
-                label: { en: 'Config' },
-                type: 'Object',
-                defaultValue: { label: 'New Node' },
-                options: {
-                  item: {
-                    label: {
-                      label: { en: 'Label' },
-                      type: 'Text',
-                      defaultValue: 'New Node',
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      /* wwEditor:start */
-      bindingValidation: {
-        type: 'array',
-        tooltip: 'Auto-loaded via bff_get_amp_workflow_full. Optional override.',
-      },
-      propertyHelp:
-        'Auto-fetched when selecting a workflow. Bind here only to override.',
-      /* wwEditor:end */
-    },
-    initialEdges: {
-      label: { en: 'Initial Edges (auto-fetched)' },
-      type: 'Array',
-      section: 'settings',
-      bindable: true,
-      defaultValue: [],
-      options: {
-        expandable: true,
-        getItemLabel(item) {
-          return `${item?.source || item?.from_node_id || '?'} → ${item?.target || item?.to_node_id || '?'}`;
-        },
-        item: {
-          type: 'Object',
-          defaultValue: { id: '', source: '', target: '', sourceHandle: 'output' },
-          options: {
-            item: {
-              id: {
-                label: { en: 'ID' },
-                type: 'Text',
-                options: { placeholder: 'Auto-generated if empty' },
-              },
-              source: {
-                label: { en: 'Source Node ID' },
-                type: 'Text',
-                defaultValue: '',
-              },
-              target: {
-                label: { en: 'Target Node ID' },
-                type: 'Text',
-                defaultValue: '',
-              },
-              sourceHandle: {
-                label: { en: 'Source Handle' },
-                type: 'Text',
-                defaultValue: 'output',
-              },
-            },
-          },
-        },
-      },
-      /* wwEditor:start */
-      bindingValidation: {
-        type: 'array',
-        tooltip: 'Auto-loaded via bff_get_amp_workflow_full. Optional override.',
-      },
-      propertyHelp:
-        'Auto-fetched when selecting a workflow. Bind here only to override.',
+        'Bind to your Supabase plugin access_token. The component uses this for all API calls including auto-fetching data and saving workflows.',
       /* wwEditor:end */
     },
 
@@ -525,24 +368,6 @@ export default {
     },
 
     // ─── Config Panel Data Sources ───────────────────────────────
-    collections: {
-      label: { en: 'Collections (auto-fetched)' },
-      type: 'Info',
-      section: 'settings',
-      options: {
-        text: { en: 'Auto-fetched via bff_get_workflow_collections(). Optional override.' },
-      },
-      bindable: true,
-      defaultValue: [],
-      /* wwEditor:start */
-      bindingValidation: {
-        type: 'array',
-        tooltip: 'Auto-fetched via bff_get_workflow_collections(). Optional override.',
-      },
-      propertyHelp:
-        'Auto-fetched from Supabase. Used by condition builder. Bind here only to override.',
-      /* wwEditor:end */
-    },
     channels: {
       label: { en: 'Available Channels' },
       type: 'Array',
@@ -601,87 +426,6 @@ export default {
       },
       propertyHelp:
         'Used by Message node config panel for template selection. Each template should have id, name, channel, and content.',
-      /* wwEditor:end */
-    },
-    audiences: {
-      label: { en: 'Audiences (auto-fetched)' },
-      type: 'Info',
-      section: 'settings',
-      options: {
-        text: { en: 'Auto-fetched via bff_list_audiences(). Optional override.' },
-      },
-      bindable: true,
-      defaultValue: [],
-      /* wwEditor:start */
-      bindingValidation: {
-        type: 'array',
-        tooltip: 'Auto-fetched via bff_list_audiences(). Optional override.',
-      },
-      propertyHelp:
-        'Auto-fetched from Supabase. Used by trigger and action config. Bind here only to override.',
-      /* wwEditor:end */
-    },
-    agents: {
-      label: { en: 'Agents (auto-fetched)' },
-      type: 'Info',
-      section: 'settings',
-      options: {
-        text: { en: 'Auto-fetched from amp_agent table. Optional override.' },
-      },
-      bindable: true,
-      defaultValue: [],
-      /* wwEditor:start */
-      bindingValidation: {
-        type: 'array',
-        tooltip: 'Auto-fetched from amp_agent table. Optional override.',
-      },
-      propertyHelp:
-        'Auto-fetched from Supabase. Used by agent node config. Bind here only to override.',
-      /* wwEditor:end */
-    },
-    supabaseUrl: {
-      label: { en: 'Supabase URL (required)' },
-      type: 'Text',
-      section: 'settings',
-      bindable: true,
-      defaultValue: '',
-      /* wwEditor:start */
-      bindingValidation: {
-        type: 'string',
-        tooltip: 'Supabase project URL (e.g., https://abc.supabase.co)',
-      },
-      propertyHelp:
-        'REQUIRED. The component auto-fetches all data (workflows, collections, audiences, agents) from Supabase using this URL.',
-      /* wwEditor:end */
-    },
-    supabaseAnonKey: {
-      label: { en: 'Supabase Anon Key (required)' },
-      type: 'Text',
-      section: 'settings',
-      bindable: true,
-      defaultValue: '',
-      /* wwEditor:start */
-      bindingValidation: {
-        type: 'string',
-        tooltip: 'Supabase publishable/anon key for the apikey header',
-      },
-      propertyHelp:
-        'REQUIRED. The publishable API key from your Supabase project settings.',
-      /* wwEditor:end */
-    },
-    authToken: {
-      label: { en: 'Auth Token / JWT (required)' },
-      type: 'Text',
-      section: 'settings',
-      bindable: true,
-      defaultValue: '',
-      /* wwEditor:start */
-      bindingValidation: {
-        type: 'string',
-        tooltip: 'Current admin user JWT. Bind to Supabase plugin access token.',
-      },
-      propertyHelp:
-        'REQUIRED. Bind to your Supabase plugin access_token. The component uses this for all API calls including auto-fetching data and saving workflows.',
       /* wwEditor:end */
     },
 
