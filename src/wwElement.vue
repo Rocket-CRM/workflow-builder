@@ -779,6 +779,13 @@ export default {
       },
     ];
 
+    // ─── Supabase API Layer (must be before any code that references api) ──
+    const supabaseUrlData = computed(() => props.content?.supabaseUrl || '');
+    const supabaseAnonKeyData = computed(() => props.content?.supabaseAnonKey || '');
+    const authTokenData = computed(() => props.content?.authToken || '');
+
+    const api = useSupabaseApi(supabaseUrlData, supabaseAnonKeyData, authTokenData);
+
     // ─── List / Detail View ─────────────────────────────────────
     const { value: currentViewVar, setValue: setCurrentView } =
       wwLib.wwVariable.useComponentVariable({
@@ -986,13 +993,6 @@ export default {
     const originalEditingConfig = ref({});
     const editingNodeType = ref('');
     const editingNodeIdLocal = ref('');
-
-    // ─── Supabase API Layer ─────────────────────────────────────
-    const supabaseUrlData = computed(() => props.content?.supabaseUrl || '');
-    const supabaseAnonKeyData = computed(() => props.content?.supabaseAnonKey || '');
-    const authTokenData = computed(() => props.content?.authToken || '');
-
-    const api = useSupabaseApi(supabaseUrlData, supabaseAnonKeyData, authTokenData);
 
     // Data sources: self-fetched from Supabase, with prop overrides as fallback
     const collectionsData = computed(() => {
