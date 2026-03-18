@@ -299,7 +299,7 @@
 </template>
 
 <script>
-import { ref, computed, watch, h, markRaw, nextTick, onMounted } from 'vue';
+import { ref, computed, watch, h, markRaw, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { VueFlow, useVueFlow, Handle, Position } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
@@ -316,6 +316,7 @@ import TriggerConfig from './components/TriggerConfig.vue';
 import WorkflowList from './components/WorkflowList.vue';
 import NodeUserList from './components/NodeUserList.vue';
 import WorkflowSettings from './components/WorkflowSettings.vue';
+import { useSupabaseApi } from './composables/useSupabaseApi';
 import {
   PolarisButton,
   PolarisSelect,
@@ -787,9 +788,13 @@ export default {
         defaultValue: 'list',
       });
 
-    const workflowsData = computed(() => props.content?.workflows || []);
-    const hasWorkflowsList = computed(() => props.content?.workflows != null);
-    const workflowsLoading = ref(false);
+    const workflowsData = computed(() => {
+      const propData = props.content?.workflows;
+      if (Array.isArray(propData) && propData.length > 0) return propData;
+      return api.workflows.value || [];
+    });
+    const hasWorkflowsList = computed(() => workflowsData.value.length > 0 || api.isReady.value);
+    const workflowsLoading = computed(() => api.loading.value?.workflows || false);
     const currentViewLocal = ref(hasWorkflowsList.value ? 'list' : 'detail');
 
     const rootContainerStyle = computed(() => ({
@@ -798,7 +803,7 @@ export default {
       minHeight: '500px',
     }));
 
-    const openWorkflow = (workflow) => {
+    const openWorkflow = async (workflow) => {
       workflowMeta.value = { ...workflow };
       currentViewLocal.value = 'detail';
       setCurrentView('detail');
@@ -806,6 +811,33 @@ export default {
         name: 'view-changed',
         event: { view: 'detail', mode: 'edit', workflowId: workflow?.id },
       });
+
+      if (workflow?.id && api.isReady.value) {
+        const detail = await api.fetchWorkflowDetail(workflow.id);
+        if (detail) {
+          const wf = detail?.workflow || detail;
+          const dbNodes = detail?.nodes || wf?.nodes || [];
+          const dbEdges = detail?.edges || wf?.edges || [];
+
+          if (wf && typeof wf === 'object') {
+            workflowMeta.value = { ...workflowMeta.value, ...wf };
+          }
+
+          isInitialLoad.value = true;
+          const { nodes: vfNodes, edges: vfEdges } = dbToVueFlow(dbNodes, dbEdges);
+          nodes.value = vfNodes;
+          edges.value = vfEdges;
+          setIsDirty(false);
+          updateVariables();
+
+          nextTick(() => {
+            if (vueFlowRef.value && vfNodes.length > 0) {
+              vueFlowRef.value.fitView({ padding: 0.2 });
+            }
+            setTimeout(() => { isInitialLoad.value = false; }, 100);
+          });
+        }
+      }
     };
 
     const createWorkflow = () => {
@@ -826,6 +858,10 @@ export default {
         name: 'view-changed',
         event: { view: 'list' },
       });
+
+      if (api.isReady.value) {
+        api.fetchWorkflows();
+      }
     };
 
     const handleWorkflowStatusToggle = (workflow, isActive) => {
@@ -951,8 +987,19 @@ export default {
     const editingNodeType = ref('');
     const editingNodeIdLocal = ref('');
 
-    // Config panel data sources from props
-    const collectionsData = computed(() => props.content?.collections || []);
+    // ─── Supabase API Layer ─────────────────────────────────────
+    const supabaseUrlData = computed(() => props.content?.supabaseUrl || '');
+    const supabaseAnonKeyData = computed(() => props.content?.supabaseAnonKey || '');
+    const authTokenData = computed(() => props.content?.authToken || '');
+
+    const api = useSupabaseApi(supabaseUrlData, supabaseAnonKeyData, authTokenData);
+
+    // Data sources: self-fetched from Supabase, with prop overrides as fallback
+    const collectionsData = computed(() => {
+      const propData = props.content?.collections;
+      if (Array.isArray(propData) && propData.length > 0) return propData;
+      return api.collections.value || [];
+    });
     const channelsData = computed(() => props.content?.channels || [
       { value: 'email', label: 'Email' },
       { value: 'sms', label: 'SMS' },
@@ -960,14 +1007,78 @@ export default {
       { value: 'push', label: 'Push Notification' },
     ]);
     const messageTemplatesData = computed(() => props.content?.messageTemplates || []);
-    const audiencesData = computed(() => props.content?.audiences || []);
-    const agentsData = computed(() => props.content?.agents || []);
-    const supabaseUrlData = computed(() => props.content?.supabaseUrl || '');
-    const supabaseAnonKeyData = computed(() => props.content?.supabaseAnonKey || '');
-    const authTokenData = computed(() => props.content?.authToken || '');
+    const audiencesData = computed(() => {
+      const propData = props.content?.audiences;
+      if (Array.isArray(propData) && propData.length > 0) return propData;
+      return api.audiences.value || [];
+    });
+    const agentsData = computed(() => {
+      const propData = props.content?.agents;
+      if (Array.isArray(propData) && propData.length > 0) return propData;
+      return api.agents.value || [];
+    });
     const configPanelWidth = computed(() => props.content?.configPanelWidth || '360px');
     const configPanelStyle = computed(() => ({ width: configPanelWidth.value }));
     const configValidationErrorsList = computed(() => configValidationErrors.value || []);
+
+    // Expose fetched data as internal variables so users can inspect what was loaded
+    const { value: fetchedWorkflows, setValue: setFetchedWorkflows } =
+      wwLib.wwVariable.useComponentVariable({
+        uid: props.uid,
+        name: 'fetchedWorkflows',
+        type: 'array',
+        defaultValue: [],
+      });
+    const { value: fetchedCollections, setValue: setFetchedCollections } =
+      wwLib.wwVariable.useComponentVariable({
+        uid: props.uid,
+        name: 'fetchedCollections',
+        type: 'array',
+        defaultValue: [],
+      });
+    const { value: fetchedAudiences, setValue: setFetchedAudiences } =
+      wwLib.wwVariable.useComponentVariable({
+        uid: props.uid,
+        name: 'fetchedAudiences',
+        type: 'array',
+        defaultValue: [],
+      });
+    const { value: fetchedAgents, setValue: setFetchedAgents } =
+      wwLib.wwVariable.useComponentVariable({
+        uid: props.uid,
+        name: 'fetchedAgents',
+        type: 'array',
+        defaultValue: [],
+      });
+    const { value: apiLoading, setValue: setApiLoading } =
+      wwLib.wwVariable.useComponentVariable({
+        uid: props.uid,
+        name: 'apiLoading',
+        type: 'object',
+        defaultValue: {},
+      });
+    const { value: apiErrors, setValue: setApiErrors } =
+      wwLib.wwVariable.useComponentVariable({
+        uid: props.uid,
+        name: 'apiErrors',
+        type: 'object',
+        defaultValue: {},
+      });
+    const { value: saveResult, setValue: setSaveResult } =
+      wwLib.wwVariable.useComponentVariable({
+        uid: props.uid,
+        name: 'saveResult',
+        type: 'object',
+        defaultValue: null,
+      });
+
+    // Sync API state to internal variables
+    watch(() => api.workflows.value, (v) => setFetchedWorkflows(v || []), { deep: true });
+    watch(() => api.collections.value, (v) => setFetchedCollections(v || []), { deep: true });
+    watch(() => api.audiences.value, (v) => setFetchedAudiences(v || []), { deep: true });
+    watch(() => api.agents.value, (v) => setFetchedAgents(v || []), { deep: true });
+    watch(() => api.loading.value, (v) => setApiLoading({ ...v }), { deep: true });
+    watch(() => api.errors.value, (v) => setApiErrors({ ...v }), { deep: true });
 
     const deepClone = (obj) => {
       if (obj === null || obj === undefined) return obj;
@@ -1181,7 +1292,7 @@ export default {
       const wfId = workflowMeta.value?.id;
       if (!wfId) return;
       try {
-        const data = await rpc('bff_amp_batch_run', { p_workflow_id: wfId });
+        const data = await api.batchRun(wfId);
         if (data?.success !== false && data?.matching_users > 0) {
           batchMatchingCount.value = data.matching_users;
           batchUserIds.value = data.user_ids || [];
@@ -1200,7 +1311,7 @@ export default {
       if (!wfId || !workflowMeta.value?.is_active) return;
       try {
         toastMessage.value = 'Finding matching users...';
-        const data = await rpc('bff_amp_batch_run', { p_workflow_id: wfId });
+        const data = await api.batchRun(wfId);
         toastMessage.value = '';
         if (data?.success !== false && data?.matching_users > 0) {
           batchMatchingCount.value = data.matching_users;
@@ -1224,20 +1335,7 @@ export default {
 
       batchDispatching.value = true;
       try {
-        const url = supabaseUrlData.value?.replace(/\/+$/, '');
-        const res = await fetch(`${url}/functions/v1/amp-batch-dispatch`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authTokenData.value}`,
-          },
-          body: JSON.stringify({
-            workflow_id: wfId,
-            merchant_id: merchantId,
-            user_ids: batchUserIds.value,
-          }),
-        });
-        const data = await res.json();
+        const data = await api.batchDispatch(wfId, merchantId, batchUserIds.value);
         batchConfirmOpen.value = false;
         toastMessage.value = `Batch run complete: ${data?.dispatched?.toLocaleString() || batchMatchingCount.value.toLocaleString()} users dispatched`;
         setTimeout(() => { toastMessage.value = ''; }, 5000);
@@ -1330,27 +1428,11 @@ export default {
     const userListNodeId = ref('');
     const userListNodeName = ref('');
 
-    const rpc = async (functionName, body = {}) => {
-      const url = supabaseUrlData.value?.replace(/\/+$/, '');
-      const token = authTokenData.value;
-      if (!url || !token) return null;
-      const res = await fetch(`${url}/rest/v1/rpc/${functionName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'apikey': supabaseAnonKeyData.value || token,
-        },
-        body: JSON.stringify(body),
-      });
-      return res.json();
-    };
-
     const fetchNodeStats = async () => {
-      const wfId = props.content?.initialWorkflow?.id;
-      if (!wfId || !supabaseUrlData.value) return;
+      const wfId = workflowMeta.value?.id || props.content?.initialWorkflow?.id;
+      if (!wfId || !api.isReady.value) return;
       try {
-        const data = await rpc('bff_get_amp_workflow_node_stats', { p_workflow_id: wfId });
+        const data = await api.fetchNodeStats(wfId);
         if (data?.success !== false && Array.isArray(data?.nodes)) {
           const map = {};
           data.nodes.forEach(n => { map[n.node_id] = { unique_passed: n.unique_passed || 0, currently_waiting: n.currently_waiting || 0 }; });
@@ -1598,13 +1680,14 @@ export default {
     // Data format conversion: Vue Flow → Database
     const vueFlowToDb = (vfNodes, vfEdges) => {
       const dbNodes = (vfNodes || []).map((node) => {
-        // Extract clean config without internal fields
         const cleanData = { ...node?.data };
         delete cleanData.color;
         delete cleanData.showEditAction;
         delete cleanData.showDeleteAction;
         delete cleanData.onEdit;
         delete cleanData.onDelete;
+        delete cleanData.stats;
+        delete cleanData.onStatsClick;
         
         return {
           id: node?.id,
@@ -1643,6 +1726,8 @@ export default {
         delete cleanData.showDeleteAction;
         delete cleanData.onEdit;
         delete cleanData.onDelete;
+        delete cleanData.stats;
+        delete cleanData.onStatsClick;
         
         return {
           id: node?.id,
@@ -1717,8 +1802,8 @@ export default {
       return { valid: errors.length === 0, errors };
     };
 
-    // Save action - returns full payload for upsert API
-    const save = () => {
+    // Save action - saves directly via bff_upsert_amp_workflow_with_graph RPC
+    const save = async () => {
       const validation = validate();
 
       if (!validation.valid) {
@@ -1733,6 +1818,8 @@ export default {
         delete cleanData.showDeleteAction;
         delete cleanData.onEdit;
         delete cleanData.onDelete;
+        delete cleanData.stats;
+        delete cleanData.onStatsClick;
         
         return {
           id: node?.id,
@@ -1763,6 +1850,44 @@ export default {
         p_nodes,
         p_edges,
       };
+
+      // Save directly via Supabase RPC
+      if (api.isReady.value) {
+        try {
+          const result = await api.saveWorkflow(payload);
+          setSaveResult(result);
+
+          if (result?.workflow_id) {
+            workflowMeta.value = { ...workflowMeta.value, id: result.workflow_id };
+          }
+
+          toastMessage.value = 'Workflow saved';
+          setTimeout(() => { toastMessage.value = ''; }, 3000);
+
+          setIsDirty(false);
+          updateVariables();
+
+          emit('trigger-event', {
+            name: 'workflow-saved',
+            event: { ...payload, result },
+          });
+
+          api.fetchWorkflows();
+
+          return { ...payload, result };
+        } catch (err) {
+          console.error('[WorkflowBuilder] Save failed:', err);
+          toastMessage.value = 'Save failed: ' + (err?.message || 'Unknown error');
+          setTimeout(() => { toastMessage.value = ''; }, 5000);
+
+          emit('trigger-event', {
+            name: 'workflow-saved',
+            event: payload,
+          });
+
+          return payload;
+        }
+      }
 
       setIsDirty(false);
       updateVariables();
@@ -2081,6 +2206,21 @@ export default {
     );
 
     const autoEntryCreated = ref(false);
+
+    // Auto-fetch all reference data when Supabase credentials become available
+    const initializeDataFetch = async () => {
+      if (!api.isReady.value) return;
+
+      await api.fetchWorkflows();
+      await api.fetchAllReferenceData();
+    };
+
+    watch(() => api.isReady.value, (ready) => {
+      if (ready) {
+        initializeDataFetch();
+      }
+    }, { immediate: true });
+
     onMounted(() => {
       setTimeout(() => {
         if (nodes.value.length === 0 && !isReadOnly.value && !autoEntryCreated.value) {
@@ -2106,16 +2246,20 @@ export default {
     // Fetch node stats when workflow ID is available, poll every 30s
     let statsInterval = null;
     watch(
-      () => props.content?.initialWorkflow?.id,
+      () => workflowMeta.value?.id || props.content?.initialWorkflow?.id,
       (wfId) => {
         if (statsInterval) clearInterval(statsInterval);
-        if (wfId && supabaseUrlData.value && authTokenData.value) {
+        if (wfId && api.isReady.value) {
           setTimeout(() => fetchNodeStats(), 200);
           statsInterval = setInterval(() => fetchNodeStats(), 30000);
         }
       },
       { immediate: true }
     );
+
+    onBeforeUnmount(() => {
+      if (statsInterval) clearInterval(statsInterval);
+    });
 
     // Watch nodes array and fit view
     watch(
@@ -2187,6 +2331,12 @@ export default {
         if (!wfId) return;
         const wf = workflowsData.value.find(w => w?.id === wfId);
         if (wf) openWorkflow(wf);
+      },
+      refreshData: () => {
+        if (api.isReady.value) {
+          api.fetchWorkflows();
+          api.fetchAllReferenceData();
+        }
       },
     });
 

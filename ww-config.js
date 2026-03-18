@@ -17,21 +17,21 @@ export default {
       'agentNodeColor',
     ],
     customSettingsPropertiesOrder: [
+      'supabaseUrl',
+      'supabaseAnonKey',
+      'authToken',
+      'readOnly',
+      'showEditAction',
+      'showDeleteAction',
       'workflows',
       'initialWorkflow',
       'initialNodes',
       'initialEdges',
-      'readOnly',
-      'showEditAction',
-      'showDeleteAction',
       'collections',
       'audiences',
       'agents',
       'channels',
       'messageTemplates',
-      'supabaseUrl',
-      'supabaseAnonKey',
-      'authToken',
     ],
   },
   actions: [
@@ -175,6 +175,16 @@ export default {
       },
       /* wwEditor:end */
     },
+    {
+      name: 'refreshData',
+      label: { en: 'Refresh All Data' },
+      action: 'refreshData',
+      /* wwEditor:start */
+      actionDescription: {
+        en: 'Re-fetches workflows, collections, audiences, and agents from Supabase',
+      },
+      /* wwEditor:end */
+    },
   ],
   triggerEvents: [
     {
@@ -307,25 +317,25 @@ export default {
   properties: {
     // ─── Data Binding ────────────────────────────────────────────
     workflows: {
-      label: { en: 'Workflows List' },
+      label: { en: 'Workflows List (auto-fetched)' },
       type: 'Info',
       section: 'settings',
       options: {
-        text: { en: 'Bind workflow list from bff_list_workflows() → data' },
+        text: { en: 'Auto-fetched from Supabase. Optional override if you want to provide your own list.' },
       },
       bindable: true,
       defaultValue: [],
       /* wwEditor:start */
       bindingValidation: {
         type: 'array',
-        tooltip: 'Array of workflows: [{id, name, description, is_active, trigger_type, node_count, created_at, updated_at}]',
+        tooltip: 'Auto-fetched from amp_workflow table. Optional override: [{id, name, description, is_active, ...}]',
       },
       propertyHelp:
-        'Used by the workflow list view. Bind to bff_list_workflows → data. When empty, shows only the builder (detail) view.',
+        'Auto-fetched from Supabase when credentials are provided. Bind here only to override the auto-fetched list.',
       /* wwEditor:end */
     },
     initialWorkflow: {
-      label: { en: 'Workflow Data' },
+      label: { en: 'Workflow Data (auto-fetched)' },
       type: 'Object',
       section: 'settings',
       bindable: true,
@@ -333,14 +343,14 @@ export default {
       /* wwEditor:start */
       bindingValidation: {
         type: 'object',
-        tooltip: 'Workflow metadata object (id, merchant_id, name, description, is_active, etc.)',
+        tooltip: 'Auto-loaded via bff_get_amp_workflow_full when selecting a workflow. Optional override.',
       },
       propertyHelp:
-        'Bind to workflow record. Used to build the p_workflow payload for upsert API.',
+        'Auto-fetched when a workflow is selected from the list. Bind here only to override or pre-load a specific workflow.',
       /* wwEditor:end */
     },
     initialNodes: {
-      label: { en: 'Initial Nodes' },
+      label: { en: 'Initial Nodes (auto-fetched)' },
       type: 'Array',
       section: 'settings',
       bindable: true,
@@ -414,14 +424,14 @@ export default {
       /* wwEditor:start */
       bindingValidation: {
         type: 'array',
-        tooltip: 'Array of node objects from database',
+        tooltip: 'Auto-loaded via bff_get_amp_workflow_full. Optional override.',
       },
       propertyHelp:
-        'Bind to Supabase collection of workflow nodes. Each node should have: id, node_type, position_x, position_y, node_config {label, ...config}',
+        'Auto-fetched when selecting a workflow. Bind here only to override.',
       /* wwEditor:end */
     },
     initialEdges: {
-      label: { en: 'Initial Edges' },
+      label: { en: 'Initial Edges (auto-fetched)' },
       type: 'Array',
       section: 'settings',
       bindable: true,
@@ -463,10 +473,10 @@ export default {
       /* wwEditor:start */
       bindingValidation: {
         type: 'array',
-        tooltip: 'Array of edge objects from database',
+        tooltip: 'Auto-loaded via bff_get_amp_workflow_full. Optional override.',
       },
       propertyHelp:
-        'Bind to Supabase collection of workflow edges. Each edge should have: id, source (or from_node_id), target (or to_node_id), sourceHandle',
+        'Auto-fetched when selecting a workflow. Bind here only to override.',
       /* wwEditor:end */
     },
 
@@ -516,21 +526,21 @@ export default {
 
     // ─── Config Panel Data Sources ───────────────────────────────
     collections: {
-      label: { en: 'Available Collections' },
+      label: { en: 'Collections (auto-fetched)' },
       type: 'Info',
       section: 'settings',
       options: {
-        text: { en: 'Bind array of collections with fields for condition builder' },
+        text: { en: 'Auto-fetched via bff_get_workflow_collections(). Optional override.' },
       },
       bindable: true,
       defaultValue: [],
       /* wwEditor:start */
       bindingValidation: {
         type: 'array',
-        tooltip: 'Array of collections: [{name, label, fields: [{name, label, type}]}]. Bind to bff_get_workflow_collections result.',
+        tooltip: 'Auto-fetched via bff_get_workflow_collections(). Optional override.',
       },
       propertyHelp:
-        'Used by the Condition node config panel. Each collection should have name, label, and fields array. Field types: string, number, boolean, date, array, uuid.',
+        'Auto-fetched from Supabase. Used by condition builder. Bind here only to override.',
       /* wwEditor:end */
     },
     channels: {
@@ -594,43 +604,43 @@ export default {
       /* wwEditor:end */
     },
     audiences: {
-      label: { en: 'Audiences' },
+      label: { en: 'Audiences (auto-fetched)' },
       type: 'Info',
       section: 'settings',
       options: {
-        text: { en: 'Bind audiences from bff_list_audiences() → data' },
+        text: { en: 'Auto-fetched via bff_list_audiences(). Optional override.' },
       },
       bindable: true,
       defaultValue: [],
       /* wwEditor:start */
       bindingValidation: {
         type: 'array',
-        tooltip: 'Array of audiences: [{id, name, description, is_active, member_count}]',
+        tooltip: 'Auto-fetched via bff_list_audiences(). Optional override.',
       },
       propertyHelp:
-        'Used by Trigger node (audience entry mode) and Action node (add/remove from audience). Bind to bff_list_audiences → data.',
+        'Auto-fetched from Supabase. Used by trigger and action config. Bind here only to override.',
       /* wwEditor:end */
     },
     agents: {
-      label: { en: 'Agents' },
+      label: { en: 'Agents (auto-fetched)' },
       type: 'Info',
       section: 'settings',
       options: {
-        text: { en: 'Bind agents from bff_list_agents() → data' },
+        text: { en: 'Auto-fetched from amp_agent table. Optional override.' },
       },
       bindable: true,
       defaultValue: [],
       /* wwEditor:start */
       bindingValidation: {
         type: 'array',
-        tooltip: 'Array of agents: [{id, name, objective, tone, action_count, outcome_count}]',
+        tooltip: 'Auto-fetched from amp_agent table. Optional override.',
       },
       propertyHelp:
-        'Used by Agent node config panel. Bind to bff_list_agents → data.',
+        'Auto-fetched from Supabase. Used by agent node config. Bind here only to override.',
       /* wwEditor:end */
     },
     supabaseUrl: {
-      label: { en: 'Supabase URL' },
+      label: { en: 'Supabase URL (required)' },
       type: 'Text',
       section: 'settings',
       bindable: true,
@@ -641,11 +651,11 @@ export default {
         tooltip: 'Supabase project URL (e.g., https://abc.supabase.co)',
       },
       propertyHelp:
-        'Used by Action node config panel to fetch dropdown options (tags, personas, forms, ticket types) via RPC calls.',
+        'REQUIRED. The component auto-fetches all data (workflows, collections, audiences, agents) from Supabase using this URL.',
       /* wwEditor:end */
     },
     supabaseAnonKey: {
-      label: { en: 'Supabase Anon Key' },
+      label: { en: 'Supabase Anon Key (required)' },
       type: 'Text',
       section: 'settings',
       bindable: true,
@@ -656,11 +666,11 @@ export default {
         tooltip: 'Supabase publishable/anon key for the apikey header',
       },
       propertyHelp:
-        'The publishable API key from your Supabase project settings. Used as the apikey header in RPC calls.',
+        'REQUIRED. The publishable API key from your Supabase project settings.',
       /* wwEditor:end */
     },
     authToken: {
-      label: { en: 'Auth Token (JWT)' },
+      label: { en: 'Auth Token / JWT (required)' },
       type: 'Text',
       section: 'settings',
       bindable: true,
@@ -671,7 +681,7 @@ export default {
         tooltip: 'Current admin user JWT. Bind to Supabase plugin access token.',
       },
       propertyHelp:
-        'The current admin user\'s JWT from the Supabase auth session. Used for Authorization header in RPC calls. Bind to your Supabase plugin\'s access_token.',
+        'REQUIRED. Bind to your Supabase plugin access_token. The component uses this for all API calls including auto-fetching data and saving workflows.',
       /* wwEditor:end */
     },
 
