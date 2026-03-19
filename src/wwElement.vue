@@ -298,15 +298,6 @@
       </div>
     </div>
 
-    <!-- Delete Node Confirmation (Pattern 17) -->
-    <div v-if="confirmDeleteNodeId" class="delete-confirm-bar">
-      <span class="delete-confirm-bar__text">Delete this node and its connections?</span>
-      <div class="delete-confirm-bar__actions">
-        <PolarisButton @click="cancelDeleteNode">Cancel</PolarisButton>
-        <PolarisButton variant="primary" tone="critical" @click="confirmDeleteNode">Delete</PolarisButton>
-      </div>
-    </div>
-
     <!-- Toast -->
     <div v-if="toastMessage" class="toast" @click="toastMessage = ''">
       {{ toastMessage }}
@@ -489,7 +480,7 @@ const ConditionNode = {
         'div',
         {
           class: ['flow-node', 'condition-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#3B82F6' },
+          style: { '--node-color': props.data?.color || '#2C6ECB' /* --p-color-bg-fill-brand */ },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
@@ -497,7 +488,7 @@ const ConditionNode = {
           createNodeBody(
             props.data?.label || 'Condition',
             '🔀',
-            props.data?.color || '#3B82F6',
+            props.data?.color || '#2C6ECB' /* --p-color-bg-fill-brand */,
             null
           ),
           h(Handle, {
@@ -532,14 +523,14 @@ const MessageNode = {
         'div',
         {
           class: ['flow-node', 'message-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#10B981' },
+          style: { '--node-color': props.data?.color || '#008060' /* --p-color-bg-fill-success */ },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Send Message'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#10B981' } }, '✉️'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#008060' /* --p-color-bg-fill-success */ } }, '✉️'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props),
@@ -560,14 +551,14 @@ const WaitNode = {
         'div',
         {
           class: ['flow-node', 'wait-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#F59E0B' },
+          style: { '--node-color': props.data?.color || '#B98900' /* --p-color-bg-fill-warning */ },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Wait'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#F59E0B' } }, '⏱️'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#B98900' /* --p-color-bg-fill-warning */ } }, '⏱️'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props, true),
@@ -588,14 +579,14 @@ const ApiNode = {
         'div',
         {
           class: ['flow-node', 'api-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#8B5CF6' },
+          style: { '--node-color': props.data?.color || '#7B61FF' /* --p-color-bg-fill-magic */ },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'API Call'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#8B5CF6' } }, '🔌'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#7B61FF' /* --p-color-bg-fill-magic */ } }, '🔌'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props),
@@ -617,14 +608,14 @@ const ActionNode = {
         'div',
         {
           class: ['flow-node', 'action-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#EC4899' },
+          style: { '--node-color': props.data?.color || '#D82C0D' /* --p-color-bg-fill-critical */ },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Action'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#EC4899' } }, '⚡'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#D82C0D' /* --p-color-bg-fill-critical */ } }, '⚡'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props),
@@ -645,14 +636,14 @@ const TestNode = {
         'div',
         {
           class: ['flow-node', 'test-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#EC4899' },
+          style: { '--node-color': '#D82C0D' /* --p-color-bg-fill-critical */ },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, 'TEST - ' + (props.data?.label || 'Working!')),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#EC4899' } }, '🧪'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': '#D82C0D' /* --p-color-bg-fill-critical */ } }, '🧪'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
         ]
@@ -673,14 +664,14 @@ const AgentNode = {
         'div',
         {
           class: ['flow-node', 'agent-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#06B6D4' },
+          style: { '--node-color': props.data?.color || '#06B6D4' /* TODO: map to Polaris token -- no exact teal/cyan match */ },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Agent'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#06B6D4' } }, '🤖'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#06B6D4' /* TODO: map to Polaris token */ } }, '🤖'),
           ]),
           h(Handle, {
             type: 'source',
@@ -750,60 +741,60 @@ export default {
     };
 
     // Default edge options - very light, smooth bezier curve like Shopify Flow
-    const defaultEdgeOptions = computed(() => ({
+    const defaultEdgeOptions = {
       type: 'default',
       animated: true,
       style: { 
-        stroke: 'var(--p-color-border)',
+        stroke: '#E1E3E5' /* --p-color-border */, 
         strokeWidth: 1,
         strokeDasharray: '4 3',
       },
       markerEnd: {
         type: 'arrowclosed',
-        color: 'var(--p-color-border)',
+        color: '#E1E3E5' /* --p-color-border */,
         width: 12,
         height: 12,
       },
-    }));
+    };
 
     const nodeGroups = [
       {
         label: 'Messages',
         nodes: [
-          { type: 'action', subType: 'send_line', label: 'LINE Message', desc: 'Send a LINE message to the user', icon: '💬', color: '#06C755' },
-          { type: 'action', subType: 'send_sms', label: 'SMS', desc: 'Send an SMS text message', icon: '📱', color: '#10B981' },
+          { type: 'action', subType: 'send_line', label: 'LINE Message', desc: 'Send a LINE message to the user', icon: '💬', color: '#06C755' /* LINE brand color */ },
+          { type: 'action', subType: 'send_sms', label: 'SMS', desc: 'Send an SMS text message', icon: '📱', color: '#008060' /* --p-color-bg-fill-success */ },
         ],
       },
       {
         label: 'Loyalty',
         nodes: [
-          { type: 'action', subType: 'award_currency', label: 'Award Currency', desc: 'Give points or tickets', icon: '🪙', color: '#F59E0B' },
-          { type: 'action', subType: 'assign_tag', label: 'Assign Tag', desc: 'Add a tag to the user', icon: '🏷️', color: '#F59E0B' },
-          { type: 'action', subType: 'remove_tag', label: 'Remove Tag', desc: 'Remove a tag from the user', icon: '🏷️', color: '#EF4444' },
-          { type: 'action', subType: 'assign_persona', label: 'Assign Persona', desc: 'Set the user persona', icon: '👤', color: '#F59E0B' },
-          { type: 'action', subType: 'assign_earn_factor', label: 'Earn Factor', desc: 'Assign a time-limited earn factor', icon: '✨', color: '#F59E0B' },
-          { type: 'action', subType: 'submit_form', label: 'Submit Form', desc: 'Auto-submit a form for the user', icon: '📋', color: '#F59E0B' },
+          { type: 'action', subType: 'award_currency', label: 'Award Currency', desc: 'Give points or tickets', icon: '🪙', color: '#B98900' /* --p-color-bg-fill-warning */ },
+          { type: 'action', subType: 'assign_tag', label: 'Assign Tag', desc: 'Add a tag to the user', icon: '🏷️', color: '#B98900' /* --p-color-bg-fill-warning */ },
+          { type: 'action', subType: 'remove_tag', label: 'Remove Tag', desc: 'Remove a tag from the user', icon: '🏷️', color: '#D82C0D' /* --p-color-bg-fill-critical */ },
+          { type: 'action', subType: 'assign_persona', label: 'Assign Persona', desc: 'Set the user persona', icon: '👤', color: '#B98900' /* --p-color-bg-fill-warning */ },
+          { type: 'action', subType: 'assign_earn_factor', label: 'Earn Factor', desc: 'Assign a time-limited earn factor', icon: '✨', color: '#B98900' /* --p-color-bg-fill-warning */ },
+          { type: 'action', subType: 'submit_form', label: 'Submit Form', desc: 'Auto-submit a form for the user', icon: '📋', color: '#B98900' /* --p-color-bg-fill-warning */ },
         ],
       },
       {
         label: 'Audience',
         nodes: [
-          { type: 'action', subType: 'add_to_audience', label: 'Add to Audience', desc: 'Add the user to an audience', icon: '👥', color: '#6366F1' },
-          { type: 'action', subType: 'remove_from_audience', label: 'Remove from Audience', desc: 'Remove the user from an audience', icon: '🚪', color: '#F59E0B' },
+          { type: 'action', subType: 'add_to_audience', label: 'Add to Audience', desc: 'Add the user to an audience', icon: '👥', color: '#7B61FF' /* --p-color-bg-fill-magic */ },
+          { type: 'action', subType: 'remove_from_audience', label: 'Remove from Audience', desc: 'Remove the user from an audience', icon: '🚪', color: '#B98900' /* --p-color-bg-fill-warning */ },
         ],
       },
       {
         label: 'Integration',
         nodes: [
-          { type: 'action', subType: 'api_call', label: 'Webhook', desc: 'Call an external API', icon: '🔗', color: '#8B5CF6' },
+          { type: 'action', subType: 'api_call', label: 'Webhook', desc: 'Call an external API', icon: '🔗', color: '#7B61FF' /* --p-color-bg-fill-magic */ },
         ],
       },
       {
         label: 'Logic',
         nodes: [
-          { type: 'wait', label: 'Time Delay', desc: 'Wait before continuing', icon: '⏱️', color: '#F59E0B' },
-          { type: 'condition', label: 'Conditional Split', desc: 'Branch based on conditions', icon: '🔀', color: '#3B82F6' },
-          { type: 'agent', label: 'AI Agent', desc: 'Let AI decide the next action', icon: '🤖', color: '#06B6D4' },
+          { type: 'wait', label: 'Time Delay', desc: 'Wait before continuing', icon: '⏱️', color: '#B98900' /* --p-color-bg-fill-warning */ },
+          { type: 'condition', label: 'Conditional Split', desc: 'Branch based on conditions', icon: '🔀', color: '#2C6ECB' /* --p-color-bg-fill-brand */ },
+          { type: 'agent', label: 'AI Agent', desc: 'Let AI decide the next action', icon: '🤖', color: '#06B6D4' /* TODO: map to Polaris token */ },
         ],
       },
     ];
@@ -1524,32 +1515,32 @@ export default {
 
     const rootStyle = computed(() => ({
       '--sidebar-width': props.content?.sidebarWidth || '150px',
-      '--sidebar-bg': props.content?.sidebarBackground || '#F9FAFB',
-      '--canvas-bg': props.content?.canvasBackground || '#FFFFFF',
+      '--sidebar-bg': props.content?.sidebarBackground || '#F1F2F3' /* --p-color-bg-surface-secondary */,
+      '--canvas-bg': props.content?.canvasBackground || '#FFFFFF' /* --p-color-bg-surface */,
     }));
 
     const sidebarStyle = computed(() => ({
       width: props.content?.sidebarWidth || '150px',
-      backgroundColor: props.content?.sidebarBackground || '#F9FAFB',
+      backgroundColor: props.content?.sidebarBackground || '#F1F2F3' /* --p-color-bg-surface-secondary */,
     }));
 
     const canvasStyle = computed(() => ({
-      backgroundColor: props.content?.canvasBackground || '#FFFFFF',
+      backgroundColor: props.content?.canvasBackground || '#FFFFFF' /* --p-color-bg-surface */,
     }));
 
-    const gridColorValue = computed(() => props.content?.gridColor || '#E5E7EB');
+    const gridColorValue = computed(() => props.content?.gridColor || '#E1E3E5' /* --p-color-border */);
 
     // Get node color based on type
     const getNodeColor = (type) => {
       const colors = {
-        condition: props.content?.conditionNodeColor || '#3B82F6',
-        action: props.content?.actionNodeColor || '#EC4899',
-        message: props.content?.messageNodeColor || '#10B981',
-        wait: props.content?.waitNodeColor || '#F59E0B',
-        api: props.content?.apiNodeColor || '#8B5CF6',
-        agent: props.content?.agentNodeColor || '#06B6D4',
+        condition: props.content?.conditionNodeColor || '#2C6ECB' /* --p-color-bg-fill-brand */,
+        action: props.content?.actionNodeColor || '#D82C0D' /* --p-color-bg-fill-critical */,
+        message: props.content?.messageNodeColor || '#008060' /* --p-color-bg-fill-success */,
+        wait: props.content?.waitNodeColor || '#B98900' /* --p-color-bg-fill-warning */,
+        api: props.content?.apiNodeColor || '#7B61FF' /* --p-color-bg-fill-magic */,
+        agent: props.content?.agentNodeColor || '#06B6D4' /* TODO: map to Polaris token */,
       };
-      return colors[type] || '#6B7280';
+      return colors[type] || '#6D7175' /* --p-color-text-secondary */;
     };
 
     // Node action visibility
@@ -1624,45 +1615,42 @@ export default {
       });
     };
     
-    const confirmDeleteNodeId = ref(null);
-
     const handleNodeDelete = (nodeId) => {
       if (isReadOnly.value) return;
       if (nodeId === entryNodeId.value) return;
+      
       const node = nodes.value.find(n => n.id === nodeId);
       if (!node) return;
-      confirmDeleteNodeId.value = nodeId;
-    };
-
-    const confirmDeleteNode = () => {
-      const nodeId = confirmDeleteNodeId.value;
-      if (!nodeId) return;
-
-      const node = nodes.value.find(n => n.id === nodeId);
-      if (!node) { confirmDeleteNodeId.value = null; return; }
-
+      
+      // Build event before removing node
       const nodeEvent = buildNodeEvent(node);
-
+      
+      // Remove the node
       nodes.value = nodes.value.filter(n => n.id !== nodeId);
+      
+      // Remove connected edges
       edges.value = edges.value.filter(
         e => e.source !== nodeId && e.target !== nodeId
       );
-
+      
+      // Clear selection if deleted node was selected
       if (selectedNodeId.value === nodeId) {
         setSelectedNodeId('');
         setSelectedNodeData({});
       }
-
+      
       setIsDirty(true);
       updateVariables();
-      confirmDeleteNodeId.value = null;
-
-      emit('trigger-event', { name: 'node-deleted', event: nodeEvent });
-      emit('trigger-event', { name: 'workflow-changed', event: { is_dirty: true } });
-    };
-
-    const cancelDeleteNode = () => {
-      confirmDeleteNodeId.value = null;
+      
+      emit('trigger-event', {
+        name: 'node-deleted',
+        event: nodeEvent,
+      });
+      
+      emit('trigger-event', {
+        name: 'workflow-changed',
+        event: { is_dirty: true },
+      });
     };
 
     // Data format conversion: Database → Vue Flow
@@ -2455,9 +2443,6 @@ export default {
       handleBatchRun,
       confirmBatchDispatch,
       closeBatchConfirm,
-      confirmDeleteNodeId,
-      confirmDeleteNode,
-      cancelDeleteNode,
       settingsPanelOpen,
       workflowConfigLocal,
       toggleSettingsPanel,
@@ -2571,9 +2556,9 @@ export default {
 .toolbar__badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--p-space-150);
-  padding: var(--p-space-050) var(--p-space-250);
-  border-radius: var(--p-border-radius-full, 20px);
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 20px;
   font-size: var(--p-font-size-275);
   font-weight: var(--p-font-weight-medium);
   white-space: nowrap;
@@ -2701,7 +2686,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--p-font-size-400);
+    font-size: 16px;
     flex-shrink: 0;
     border-radius: var(--p-border-radius-200);
     background: var(--icon-bg, var(--p-color-bg-fill-secondary));
@@ -2817,7 +2802,7 @@ export default {
 }
 
 :deep(.node-type-subtitle) {
-  font-size: var(--p-font-size-200);
+  font-size: 10px;
   font-weight: var(--p-font-weight-semibold);
   color: var(--p-color-text-secondary);
   text-transform: uppercase;
@@ -2844,7 +2829,7 @@ export default {
   justify-content: center;
   background: color-mix(in srgb, var(--badge-color, var(--p-color-bg-fill-brand)) 15%, white);
   border-radius: var(--p-border-radius-200);
-  font-size: var(--p-font-size-400);
+  font-size: 16px;
   flex-shrink: 0;
 }
 
@@ -3022,9 +3007,9 @@ export default {
 
 // Edge labels
 :deep(.vue-flow__edge-text) {
-  font-size: var(--p-font-size-200);
+  font-size: 11px;
   fill: var(--p-color-text-secondary);
-  font-weight: var(--p-font-weight-medium);
+  font-weight: 500;
 }
 
 :deep(.vue-flow__edge-textbg) {
@@ -3097,7 +3082,7 @@ export default {
   justify-content: center;
   background: var(--p-color-bg-fill);
   border-radius: var(--p-border-radius-200);
-  font-size: var(--p-font-size-400);
+  font-size: 18px;
   flex-shrink: 0;
 
   &--settings { background: var(--p-color-bg-surface-secondary); }
@@ -3352,35 +3337,6 @@ export default {
 @keyframes toast-in {
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-
-// Delete confirmation bar (Pattern 17 - inline confirmation)
-.delete-confirm-bar {
-  position: absolute;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  gap: var(--p-space-300);
-  padding: var(--p-space-300) var(--p-space-400);
-  background: var(--p-color-bg-surface);
-  border: var(--p-border-width-025) solid var(--p-color-border);
-  border-radius: var(--p-border-radius-300);
-  box-shadow: var(--p-shadow-400);
-
-  &__text {
-    font-size: var(--p-font-size-300);
-    font-weight: var(--p-font-weight-medium);
-    color: var(--p-color-text);
-    white-space: nowrap;
-  }
-
-  &__actions {
-    display: flex;
-    gap: var(--p-space-200);
-  }
 }
 
 // Responsive

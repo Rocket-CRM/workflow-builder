@@ -290,10 +290,10 @@ export default {
       left: 2px;
       width: 16px;
       height: 16px;
-      background: white;
+      background: var(--p-color-bg-surface);
       border-radius: 50%;
       transition: transform 0.2s;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      box-shadow: var(--p-shadow-100);
     }
   }
 

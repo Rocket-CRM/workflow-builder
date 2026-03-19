@@ -198,11 +198,14 @@
       </div>
 
       <!-- Empty state -->
-      <div v-else class="empty-state">
-        No condition groups yet
-      </div>
+      <PolarisEmptyState v-else heading="No condition groups yet" icon="🔀">
+        Add a group to start building conditions
+        <template #actions>
+          <PolarisButton variant="primary" @click="addGroup">+ Add Group</PolarisButton>
+        </template>
+      </PolarisEmptyState>
 
-      <PolarisButton variant="outline" fullWidth @click="addGroup" style="margin-top: var(--p-space-300);">
+      <PolarisButton v-if="config?.groups?.length" variant="outline" fullWidth @click="addGroup" style="margin-top: var(--p-space-300);">
         + Add Group
       </PolarisButton>
     </PolarisCardSection>
@@ -220,6 +223,7 @@ import {
   PolarisSelect,
   PolarisButton,
   PolarisText,
+  PolarisEmptyState,
 } from 'polaris-weweb-styles/components';
 
 const OPERATORS_BY_TYPE = {
@@ -298,6 +302,7 @@ export default {
     PolarisSelect,
     PolarisButton,
     PolarisText,
+    PolarisEmptyState,
   },
   props: {
     config: { type: Object, required: true },
@@ -761,11 +766,4 @@ export default {
   }
 }
 
-.empty-state {
-  @include polaris-tokens;
-  text-align: center;
-  padding: var(--p-space-300) 0;
-  color: var(--p-color-text-secondary);
-  font-size: var(--p-font-size-300);
-}
 </style>
