@@ -238,6 +238,17 @@
       </VueFlow>
     </div>
 
+    <!-- Node Delete Confirmation (Pattern 17 — Inline Confirmation) -->
+    <div v-if="confirmDeleteNodeId" class="delete-confirm-bar">
+      <span class="delete-confirm-bar__text">
+        {{ confirmDeleteNodeId === '__bulk__' ? 'Delete selected nodes?' : 'Delete this node?' }}
+      </span>
+      <div class="delete-confirm-bar__actions">
+        <PolarisButton @click="cancelNodeDeletion">Cancel</PolarisButton>
+        <PolarisButton variant="primary" tone="critical" @click="confirmNodeDeletion">Delete</PolarisButton>
+      </div>
+    </div>
+
     <!-- Status Panel (right overlay) -->
     <div v-if="statusPanelOpen" class="status-panel">
       <div class="status-panel__content">
@@ -480,7 +491,7 @@ const ConditionNode = {
         'div',
         {
           class: ['flow-node', 'condition-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#2C6ECB' /* --p-color-bg-fill-brand */ },
+          style: { '--node-color': props.data?.color || 'var(--wf-node-condition)' },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
@@ -488,7 +499,7 @@ const ConditionNode = {
           createNodeBody(
             props.data?.label || 'Condition',
             '🔀',
-            props.data?.color || '#2C6ECB' /* --p-color-bg-fill-brand */,
+            props.data?.color || 'var(--wf-node-condition)',
             null
           ),
           h(Handle, {
@@ -523,14 +534,14 @@ const MessageNode = {
         'div',
         {
           class: ['flow-node', 'message-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#008060' /* --p-color-bg-fill-success */ },
+          style: { '--node-color': props.data?.color || 'var(--wf-node-message)' },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Send Message'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#008060' /* --p-color-bg-fill-success */ } }, '✉️'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || 'var(--wf-node-message)' } }, '✉️'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props),
@@ -551,14 +562,14 @@ const WaitNode = {
         'div',
         {
           class: ['flow-node', 'wait-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#B98900' /* --p-color-bg-fill-warning */ },
+          style: { '--node-color': props.data?.color || 'var(--wf-node-wait)' },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Wait'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#B98900' /* --p-color-bg-fill-warning */ } }, '⏱️'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || 'var(--wf-node-wait)' } }, '⏱️'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props, true),
@@ -579,14 +590,14 @@ const ApiNode = {
         'div',
         {
           class: ['flow-node', 'api-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#7B61FF' /* --p-color-bg-fill-magic */ },
+          style: { '--node-color': props.data?.color || 'var(--wf-node-api)' },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'API Call'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#7B61FF' /* --p-color-bg-fill-magic */ } }, '🔌'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || 'var(--wf-node-api)' } }, '🔌'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props),
@@ -608,14 +619,14 @@ const ActionNode = {
         'div',
         {
           class: ['flow-node', 'action-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#D82C0D' /* --p-color-bg-fill-critical */ },
+          style: { '--node-color': props.data?.color || 'var(--wf-node-action)' },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Action'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#D82C0D' /* --p-color-bg-fill-critical */ } }, '⚡'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || 'var(--wf-node-action)' } }, '⚡'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props),
@@ -636,14 +647,14 @@ const TestNode = {
         'div',
         {
           class: ['flow-node', 'test-node', { selected: props.selected }],
-          style: { '--node-color': '#D82C0D' /* --p-color-bg-fill-critical */ },
+          style: { '--node-color': 'var(--wf-node-action)' },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, 'TEST - ' + (props.data?.label || 'Working!')),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': '#D82C0D' /* --p-color-bg-fill-critical */ } }, '🧪'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': 'var(--wf-node-action)' } }, '🧪'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
         ]
@@ -664,14 +675,14 @@ const AgentNode = {
         'div',
         {
           class: ['flow-node', 'agent-node', { selected: props.selected }],
-          style: { '--node-color': props.data?.color || '#06B6D4' /* TODO: map to Polaris token -- no exact teal/cyan match */ },
+          style: { '--node-color': props.data?.color || 'var(--wf-node-agent)' },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Agent'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#06B6D4' /* TODO: map to Polaris token */ } }, '🤖'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || 'var(--wf-node-agent)' } }, '🤖'),
           ]),
           h(Handle, {
             type: 'source',
@@ -728,6 +739,7 @@ export default {
     const edges = ref([]);
     const draggedNodeInfo = ref(null);
     const isInitialLoad = ref(true);
+    const confirmDeleteNodeId = ref(null);
 
     // Custom node types registration
     const customNodeTypes = {
@@ -745,7 +757,7 @@ export default {
       type: 'default',
       animated: true,
       style: { 
-        stroke: '#E1E3E5' /* --p-color-border */, 
+        stroke: 'var(--p-color-border)', 
         strokeWidth: 1,
         strokeDasharray: '4 3',
       },
@@ -794,7 +806,7 @@ export default {
         nodes: [
           { type: 'wait', label: 'Time Delay', desc: 'Wait before continuing', icon: '⏱️', color: '#B98900' /* --p-color-bg-fill-warning */ },
           { type: 'condition', label: 'Conditional Split', desc: 'Branch based on conditions', icon: '🔀', color: '#2C6ECB' /* --p-color-bg-fill-brand */ },
-          { type: 'agent', label: 'AI Agent', desc: 'Let AI decide the next action', icon: '🤖', color: '#06B6D4' /* TODO: map to Polaris token */ },
+          { type: 'agent', label: 'AI Agent', desc: 'Let AI decide the next action', icon: '🤖', color: '#005BD3' /* --p-color-bg-fill-info */ /* TODO: map to Polaris token */ },
         ],
       },
     ];
@@ -1515,32 +1527,32 @@ export default {
 
     const rootStyle = computed(() => ({
       '--sidebar-width': props.content?.sidebarWidth || '150px',
-      '--sidebar-bg': props.content?.sidebarBackground || '#F1F2F3' /* --p-color-bg-surface-secondary */,
-      '--canvas-bg': props.content?.canvasBackground || '#FFFFFF' /* --p-color-bg-surface */,
+      '--sidebar-bg': props.content?.sidebarBackground || 'var(--p-color-bg-surface-secondary)',
+      '--canvas-bg': props.content?.canvasBackground || 'var(--p-color-bg-surface)',
     }));
 
     const sidebarStyle = computed(() => ({
       width: props.content?.sidebarWidth || '150px',
-      backgroundColor: props.content?.sidebarBackground || '#F1F2F3' /* --p-color-bg-surface-secondary */,
+      backgroundColor: props.content?.sidebarBackground || 'var(--p-color-bg-surface-secondary)',
     }));
 
     const canvasStyle = computed(() => ({
-      backgroundColor: props.content?.canvasBackground || '#FFFFFF' /* --p-color-bg-surface */,
+      backgroundColor: props.content?.canvasBackground || 'var(--p-color-bg-surface)',
     }));
 
-    const gridColorValue = computed(() => props.content?.gridColor || '#E1E3E5' /* --p-color-border */);
+    const gridColorValue = computed(() => props.content?.gridColor || 'var(--p-color-border-subdued)');
 
     // Get node color based on type
     const getNodeColor = (type) => {
       const colors = {
-        condition: props.content?.conditionNodeColor || '#2C6ECB' /* --p-color-bg-fill-brand */,
-        action: props.content?.actionNodeColor || '#D82C0D' /* --p-color-bg-fill-critical */,
-        message: props.content?.messageNodeColor || '#008060' /* --p-color-bg-fill-success */,
-        wait: props.content?.waitNodeColor || '#B98900' /* --p-color-bg-fill-warning */,
-        api: props.content?.apiNodeColor || '#7B61FF' /* --p-color-bg-fill-magic */,
-        agent: props.content?.agentNodeColor || '#06B6D4' /* TODO: map to Polaris token */,
+        condition: props.content?.conditionNodeColor || 'var(--wf-node-condition)',
+        action: props.content?.actionNodeColor || 'var(--wf-node-action)',
+        message: props.content?.messageNodeColor || 'var(--wf-node-message)',
+        wait: props.content?.waitNodeColor || 'var(--wf-node-wait)',
+        api: props.content?.apiNodeColor || 'var(--wf-node-api)',
+        agent: props.content?.agentNodeColor || 'var(--wf-node-agent)',
       };
-      return colors[type] || '#6D7175' /* --p-color-text-secondary */;
+      return colors[type] || 'var(--wf-node-fallback)';
     };
 
     // Node action visibility
@@ -1618,39 +1630,61 @@ export default {
     const handleNodeDelete = (nodeId) => {
       if (isReadOnly.value) return;
       if (nodeId === entryNodeId.value) return;
-      
+      confirmDeleteNodeId.value = nodeId;
+    };
+
+    const confirmNodeDeletion = () => {
+      const nodeId = confirmDeleteNodeId.value;
+      confirmDeleteNodeId.value = null;
+      if (!nodeId) return;
+
+      if (nodeId === '__bulk__') {
+        const eid = entryNodeId.value;
+        const selectedNodes = nodes.value.filter((n) => n.selected && n.id !== eid);
+        const selectedNodeIds = new Set(selectedNodes.map((n) => n.id));
+        nodes.value = nodes.value.filter((n) => !n.selected || n.id === eid);
+        edges.value = edges.value.filter(
+          (e) => !e.selected && !selectedNodeIds.has(e.source) && !selectedNodeIds.has(e.target)
+        );
+        setSelectedNodeId('');
+        setSelectedNodeData({});
+        setIsDirty(true);
+        emit('trigger-event', { name: 'workflow-changed', event: { is_dirty: true } });
+        updateVariables();
+        return;
+      }
+
       const node = nodes.value.find(n => n.id === nodeId);
       if (!node) return;
-      
-      // Build event before removing node
+
       const nodeEvent = buildNodeEvent(node);
-      
-      // Remove the node
+
       nodes.value = nodes.value.filter(n => n.id !== nodeId);
-      
-      // Remove connected edges
       edges.value = edges.value.filter(
         e => e.source !== nodeId && e.target !== nodeId
       );
-      
-      // Clear selection if deleted node was selected
+
       if (selectedNodeId.value === nodeId) {
         setSelectedNodeId('');
         setSelectedNodeData({});
       }
-      
+
       setIsDirty(true);
       updateVariables();
-      
+
       emit('trigger-event', {
         name: 'node-deleted',
         event: nodeEvent,
       });
-      
+
       emit('trigger-event', {
         name: 'workflow-changed',
         event: { is_dirty: true },
       });
+    };
+
+    const cancelNodeDeletion = () => {
+      confirmDeleteNodeId.value = null;
     };
 
     // Data format conversion: Database → Vue Flow
@@ -2169,26 +2203,15 @@ export default {
         const selectedNodes = nodes.value.filter((n) => n.selected && n.id !== eid);
         const selectedEdges = edges.value.filter((e) => e.selected);
 
-        if (selectedNodes.length > 0 || selectedEdges.length > 0) {
-          const selectedNodeIds = new Set(selectedNodes.map((n) => n.id));
-
-          nodes.value = nodes.value.filter((n) => !n.selected || n.id === eid);
-          edges.value = edges.value.filter(
-            (e) =>
-              !e.selected &&
-              !selectedNodeIds.has(e.source) &&
-              !selectedNodeIds.has(e.target)
-          );
-
-          setSelectedNodeId('');
-          setSelectedNodeData({});
+        if (selectedNodes.length > 0) {
+          confirmDeleteNodeId.value = selectedNodes.length === 1 ? selectedNodes[0].id : '__bulk__';
+        } else if (selectedEdges.length > 0) {
+          edges.value = edges.value.filter((e) => !e.selected);
           setIsDirty(true);
-
           emit('trigger-event', {
             name: 'workflow-changed',
             event: { is_dirty: true },
           });
-
           updateVariables();
         }
       }
@@ -2443,6 +2466,9 @@ export default {
       handleBatchRun,
       confirmBatchDispatch,
       closeBatchConfirm,
+      confirmDeleteNodeId,
+      confirmNodeDeletion,
+      cancelNodeDeletion,
       settingsPanelOpen,
       workflowConfigLocal,
       toggleSettingsPanel,
@@ -2469,6 +2495,14 @@ export default {
 .workflow-root {
   @include polaris-tokens;
   font-family: var(--p-font-family-sans);
+
+  --wf-node-condition: var(--p-color-bg-fill-brand, #2C6ECB);
+  --wf-node-message: var(--p-color-bg-fill-success, #008060);
+  --wf-node-wait: var(--p-color-bg-fill-warning, #B98900);
+  --wf-node-api: var(--p-color-bg-fill-magic, #7B61FF);
+  --wf-node-action: var(--p-color-bg-fill-critical, #D82C0D);
+  --wf-node-agent: var(--p-color-bg-fill-info, #005BD3);
+  --wf-node-fallback: var(--p-color-text-secondary, #6D7175);
   width: 100%;
   height: 100%;
   min-height: 500px;
@@ -3337,6 +3371,34 @@ export default {
 @keyframes toast-in {
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.delete-confirm-bar {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-300);
+  background: var(--p-color-bg-surface);
+  border: var(--p-border-width-025) solid var(--p-color-border);
+  border-radius: var(--p-border-radius-300);
+  padding: var(--p-space-300) var(--p-space-400);
+  box-shadow: var(--p-shadow-300);
+
+  &__text {
+    font-size: var(--p-font-size-300);
+    font-weight: var(--p-font-weight-medium);
+    color: var(--p-color-text);
+    white-space: nowrap;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--p-space-200);
+  }
 }
 
 // Responsive
