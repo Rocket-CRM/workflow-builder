@@ -2,7 +2,7 @@
   <div class="action-config">
     <!-- Loading state -->
     <div v-if="optionsLoading" class="loading-state">
-      <span class="loading-state__spinner"></span>
+      <PolarisSpinner size="small" />
       <span class="loading-state__text">Loading options...</span>
     </div>
 
@@ -130,7 +130,7 @@
 
         <!-- Form field loading -->
         <div v-if="formFieldsLoading" class="loading-state loading-state--inline">
-          <span class="loading-state__spinner loading-state__spinner--small"></span>
+          <PolarisSpinner size="small" />
           <span class="loading-state__text">Loading form fields...</span>
         </div>
 
@@ -404,6 +404,7 @@ import {
   PolarisInline,
   PolarisCard,
   PolarisCardSection,
+  PolarisSpinner,
 } from 'polaris-weweb-styles/components';
 
 const ACTION_GROUPS = [
@@ -484,6 +485,7 @@ export default {
     PolarisInline,
     PolarisCard,
     PolarisCardSection,
+    PolarisSpinner,
   },
   props: {
     config: { type: Object, required: true },
@@ -905,20 +907,6 @@ export default {
 
   &__text { font-size: var(--p-font-size-300); }
 
-  &__spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--p-color-border);
-    border-top-color: var(--p-color-text-brand);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-
-    &--small { width: 14px; height: 14px; }
-  }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .variable-ref {
@@ -968,10 +956,10 @@ export default {
 
 .variable-ref code {
   background: var(--p-color-bg-surface-secondary);
-  padding: 2px 6px;
+  padding: var(--p-space-050) var(--p-space-150);
   border-radius: var(--p-border-radius-100);
   font-family: var(--p-font-family-mono);
-  font-size: 11px;
+  font-size: var(--p-font-size-200);
   color: var(--p-color-text);
   white-space: nowrap;
   cursor: pointer;

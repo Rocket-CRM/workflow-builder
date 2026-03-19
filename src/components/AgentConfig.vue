@@ -2,7 +2,7 @@
   <div class="agent-config">
     <!-- Loading state -->
     <div v-if="loading" class="loading-state">
-      <span class="loading-state__spinner"></span>
+      <PolarisSpinner size="small" />
       <span class="loading-state__text">Loading agents...</span>
     </div>
 
@@ -66,6 +66,7 @@ import {
   PolarisBanner,
   PolarisCard,
   PolarisCardSection,
+  PolarisSpinner,
 } from 'polaris-weweb-styles/components';
 
 const AGENT_VARS = [
@@ -75,7 +76,7 @@ const AGENT_VARS = [
 
 export default {
   name: 'AgentConfig',
-  components: { PolarisSelect, PolarisBanner, PolarisCard, PolarisCardSection },
+  components: { PolarisSelect, PolarisBanner, PolarisCard, PolarisCardSection, PolarisSpinner },
   props: {
     config: { type: Object, required: true },
     agents: { type: Array, default: () => [] },
@@ -195,7 +196,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #CFFAFE;
+    background: var(--p-color-bg-fill-info-secondary);
     border-radius: var(--p-border-radius-200);
     font-size: 18px;
     flex-shrink: 0;
@@ -258,18 +259,7 @@ export default {
   color: var(--p-color-text-secondary);
 
   &__text { font-size: var(--p-font-size-300); }
-
-  &__spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--p-color-border);
-    border-top-color: var(--p-color-text-brand);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
 }
-
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .variable-ref {
   border-top: 1px solid var(--p-color-border);
@@ -302,7 +292,7 @@ export default {
   padding: 2px 6px;
   border-radius: var(--p-border-radius-100);
   font-family: var(--p-font-family-mono);
-  font-size: 11px;
+  font-size: var(--p-font-size-200);
   color: var(--p-color-text);
 }
 </style>

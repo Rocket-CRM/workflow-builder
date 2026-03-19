@@ -21,7 +21,7 @@
       <!-- Table -->
       <div class="user-list-panel__body">
         <div v-if="loading" class="user-list-panel__loading">
-          <span class="spinner"></span> Loading...
+          <PolarisSpinner size="small" /> Loading...
         </div>
 
         <table v-else-if="users.length" class="user-table">
@@ -60,11 +60,11 @@
 
 <script>
 import { ref, watch, onMounted } from 'vue';
-import { PolarisButton } from 'polaris-weweb-styles/components';
+import { PolarisButton, PolarisSpinner } from 'polaris-weweb-styles/components';
 
 export default {
   name: 'NodeUserList',
-  components: { PolarisButton },
+  components: { PolarisButton, PolarisSpinner },
   props: {
     workflowId: { type: String, required: true },
     nodeId: { type: String, required: true },
@@ -161,7 +161,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: var(--p-space-1000);
 }
 
 .user-list-panel {
@@ -233,16 +233,6 @@ export default {
   font-size: var(--p-font-size-300);
 }
 
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--p-color-border);
-  border-top-color: var(--p-color-text-brand);
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .user-table {
   width: 100%;
@@ -278,16 +268,16 @@ export default {
 
 .status-badge {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
+  padding: var(--p-space-050) var(--p-space-200);
+  border-radius: var(--p-border-radius-200);
+  font-size: var(--p-font-size-200);
   font-weight: var(--p-font-weight-medium);
   text-transform: capitalize;
 
-  &--executed, &--sent { background: #D1FAE5; color: #065F46; }
-  &--delivered { background: #D1FAE5; color: #065F46; }
-  &--waiting { background: #DBEAFE; color: #1E40AF; }
-  &--failed { background: #FEE2E2; color: #991B1B; }
+  &--executed, &--sent { background: var(--p-color-bg-fill-success-secondary); color: var(--p-color-text-success); }
+  &--delivered { background: var(--p-color-bg-fill-success-secondary); color: var(--p-color-text-success); }
+  &--waiting { background: var(--p-color-bg-fill-info-secondary); color: var(--p-color-text-info); }
+  &--failed { background: var(--p-color-bg-fill-critical-secondary); color: var(--p-color-text-critical); }
 }
 
 .user-list-panel__footer {

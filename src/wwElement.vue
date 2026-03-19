@@ -298,6 +298,15 @@
       </div>
     </div>
 
+    <!-- Delete Node Confirmation (Pattern 17) -->
+    <div v-if="confirmDeleteNodeId" class="delete-confirm-bar">
+      <span class="delete-confirm-bar__text">Delete this node and its connections?</span>
+      <div class="delete-confirm-bar__actions">
+        <PolarisButton @click="cancelDeleteNode">Cancel</PolarisButton>
+        <PolarisButton variant="primary" tone="critical" @click="confirmDeleteNode">Delete</PolarisButton>
+      </div>
+    </div>
+
     <!-- Toast -->
     <div v-if="toastMessage" class="toast" @click="toastMessage = ''">
       {{ toastMessage }}
@@ -636,14 +645,14 @@ const TestNode = {
         'div',
         {
           class: ['flow-node', 'test-node', { selected: props.selected }],
-          style: { '--node-color': '#EC4899' },
+          style: { '--node-color': props.data?.color || '#EC4899' },
         },
         [
           createNodeActions(props, showEdit.value, showDelete.value),
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, 'TEST - ' + (props.data?.label || 'Working!')),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': '#EC4899' } }, '🧪'),
+            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || '#EC4899' } }, '🧪'),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
         ]
@@ -741,21 +750,21 @@ export default {
     };
 
     // Default edge options - very light, smooth bezier curve like Shopify Flow
-    const defaultEdgeOptions = {
-      type: 'default', // bezier curve (smoothest)
+    const defaultEdgeOptions = computed(() => ({
+      type: 'default',
       animated: true,
       style: { 
-        stroke: '#CCCCCC', 
+        stroke: 'var(--p-color-border)',
         strokeWidth: 1,
         strokeDasharray: '4 3',
       },
       markerEnd: {
         type: 'arrowclosed',
-        color: '#CCCCCC',
+        color: 'var(--p-color-border)',
         width: 12,
         height: 12,
       },
-    };
+    }));
 
     const nodeGroups = [
       {
@@ -1615,42 +1624,45 @@ export default {
       });
     };
     
+    const confirmDeleteNodeId = ref(null);
+
     const handleNodeDelete = (nodeId) => {
       if (isReadOnly.value) return;
       if (nodeId === entryNodeId.value) return;
-      
       const node = nodes.value.find(n => n.id === nodeId);
       if (!node) return;
-      
-      // Build event before removing node
+      confirmDeleteNodeId.value = nodeId;
+    };
+
+    const confirmDeleteNode = () => {
+      const nodeId = confirmDeleteNodeId.value;
+      if (!nodeId) return;
+
+      const node = nodes.value.find(n => n.id === nodeId);
+      if (!node) { confirmDeleteNodeId.value = null; return; }
+
       const nodeEvent = buildNodeEvent(node);
-      
-      // Remove the node
+
       nodes.value = nodes.value.filter(n => n.id !== nodeId);
-      
-      // Remove connected edges
       edges.value = edges.value.filter(
         e => e.source !== nodeId && e.target !== nodeId
       );
-      
-      // Clear selection if deleted node was selected
+
       if (selectedNodeId.value === nodeId) {
         setSelectedNodeId('');
         setSelectedNodeData({});
       }
-      
+
       setIsDirty(true);
       updateVariables();
-      
-      emit('trigger-event', {
-        name: 'node-deleted',
-        event: nodeEvent,
-      });
-      
-      emit('trigger-event', {
-        name: 'workflow-changed',
-        event: { is_dirty: true },
-      });
+      confirmDeleteNodeId.value = null;
+
+      emit('trigger-event', { name: 'node-deleted', event: nodeEvent });
+      emit('trigger-event', { name: 'workflow-changed', event: { is_dirty: true } });
+    };
+
+    const cancelDeleteNode = () => {
+      confirmDeleteNodeId.value = null;
     };
 
     // Data format conversion: Database → Vue Flow
@@ -2443,6 +2455,9 @@ export default {
       handleBatchRun,
       confirmBatchDispatch,
       closeBatchConfirm,
+      confirmDeleteNodeId,
+      confirmDeleteNode,
+      cancelDeleteNode,
       settingsPanelOpen,
       workflowConfigLocal,
       toggleSettingsPanel,
@@ -2556,9 +2571,9 @@ export default {
 .toolbar__badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  border-radius: 20px;
+  gap: var(--p-space-150);
+  padding: var(--p-space-050) var(--p-space-250);
+  border-radius: var(--p-border-radius-full, 20px);
   font-size: var(--p-font-size-275);
   font-weight: var(--p-font-weight-medium);
   white-space: nowrap;
@@ -2686,7 +2701,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: var(--p-font-size-400);
     flex-shrink: 0;
     border-radius: var(--p-border-radius-200);
     background: var(--icon-bg, var(--p-color-bg-fill-secondary));
@@ -2802,7 +2817,7 @@ export default {
 }
 
 :deep(.node-type-subtitle) {
-  font-size: 10px;
+  font-size: var(--p-font-size-200);
   font-weight: var(--p-font-weight-semibold);
   color: var(--p-color-text-secondary);
   text-transform: uppercase;
@@ -2829,7 +2844,7 @@ export default {
   justify-content: center;
   background: color-mix(in srgb, var(--badge-color, var(--p-color-bg-fill-brand)) 15%, white);
   border-radius: var(--p-border-radius-200);
-  font-size: 16px;
+  font-size: var(--p-font-size-400);
   flex-shrink: 0;
 }
 
@@ -3007,9 +3022,9 @@ export default {
 
 // Edge labels
 :deep(.vue-flow__edge-text) {
-  font-size: 11px;
+  font-size: var(--p-font-size-200);
   fill: var(--p-color-text-secondary);
-  font-weight: 500;
+  font-weight: var(--p-font-weight-medium);
 }
 
 :deep(.vue-flow__edge-textbg) {
@@ -3082,7 +3097,7 @@ export default {
   justify-content: center;
   background: var(--p-color-bg-fill);
   border-radius: var(--p-border-radius-200);
-  font-size: 18px;
+  font-size: var(--p-font-size-400);
   flex-shrink: 0;
 
   &--settings { background: var(--p-color-bg-surface-secondary); }
@@ -3337,6 +3352,35 @@ export default {
 @keyframes toast-in {
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+// Delete confirmation bar (Pattern 17 - inline confirmation)
+.delete-confirm-bar {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-300);
+  padding: var(--p-space-300) var(--p-space-400);
+  background: var(--p-color-bg-surface);
+  border: var(--p-border-width-025) solid var(--p-color-border);
+  border-radius: var(--p-border-radius-300);
+  box-shadow: var(--p-shadow-400);
+
+  &__text {
+    font-size: var(--p-font-size-300);
+    font-weight: var(--p-font-weight-medium);
+    color: var(--p-color-text);
+    white-space: nowrap;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--p-space-200);
+  }
 }
 
 // Responsive

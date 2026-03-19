@@ -11,18 +11,18 @@
 
     <!-- Loading -->
     <div v-if="loading" class="workflow-list__loading">
-      <span class="spinner"></span>
+      <PolarisSpinner size="small" />
       <span>Loading workflows...</span>
     </div>
 
     <!-- Empty state -->
     <div v-else-if="safeWorkflows.length === 0" class="workflow-list__empty">
-      <div class="empty-state">
-        <span class="empty-state__icon">🔀</span>
-        <h3 class="empty-state__title">No workflows yet</h3>
-        <p class="empty-state__desc">Create your first workflow to automate user journeys</p>
-        <PolarisButton variant="primary" @click="$emit('create')">Create Workflow</PolarisButton>
-      </div>
+      <PolarisEmptyState heading="No workflows yet" icon="🔀">
+        Create your first workflow to automate user journeys
+        <template #actions>
+          <PolarisButton variant="primary" @click="$emit('create')">Create Workflow</PolarisButton>
+        </template>
+      </PolarisEmptyState>
     </div>
 
     <!-- Table -->
@@ -75,11 +75,11 @@
 
 <script>
 import { computed } from 'vue';
-import { PolarisButton } from 'polaris-weweb-styles/components';
+import { PolarisButton, PolarisSpinner, PolarisEmptyState } from 'polaris-weweb-styles/components';
 
 export default {
   name: 'WorkflowList',
-  components: { PolarisButton },
+  components: { PolarisButton, PolarisSpinner, PolarisEmptyState },
   props: {
     workflows: { type: Array, default: () => [] },
     loading: { type: Boolean, default: false },
@@ -160,17 +160,6 @@ export default {
   border-radius: var(--p-border-radius-300);
 }
 
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--p-color-border);
-  border-top-color: var(--p-color-text-brand);
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
 .workflow-list__empty {
   flex: 1;
   display: flex;
@@ -179,26 +168,7 @@ export default {
   background: var(--p-color-bg-surface);
   border: 1px solid var(--p-color-border);
   border-radius: var(--p-border-radius-300);
-}
-
-.empty-state {
-  text-align: center;
-  padding: var(--p-space-800);
-
-  &__icon { font-size: 48px; display: block; margin-bottom: var(--p-space-300); }
-
-  &__title {
-    font-size: var(--p-font-size-400);
-    font-weight: var(--p-font-weight-semibold);
-    color: var(--p-color-text);
-    margin: 0 0 var(--p-space-100);
-  }
-
-  &__desc {
-    font-size: var(--p-font-size-300);
-    color: var(--p-color-text-secondary);
-    margin: 0 0 var(--p-space-400);
-  }
+  min-height: 300px;
 }
 
 .workflow-list__table-wrap {

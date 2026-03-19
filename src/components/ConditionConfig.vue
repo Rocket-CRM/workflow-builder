@@ -764,7 +764,7 @@ export default {
 .empty-state {
   @include polaris-tokens;
   text-align: center;
-  padding: 12px 0;
+  padding: var(--p-space-300) 0;
   color: var(--p-color-text-secondary);
   font-size: var(--p-font-size-300);
 }

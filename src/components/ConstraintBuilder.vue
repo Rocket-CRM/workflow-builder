@@ -83,15 +83,15 @@ export default {
 .constraint-rule {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--p-space-150);
   flex-wrap: wrap;
-  padding: 8px 10px;
+  padding: var(--p-space-200) var(--p-space-250);
   background: var(--p-color-bg-surface-secondary);
   border: 1px solid var(--p-color-border);
   border-radius: var(--p-border-radius-200);
 
   &__text {
-    font-size: 13px;
+    font-size: var(--p-font-size-300);
     color: var(--p-color-text-secondary);
     white-space: nowrap;
   }
@@ -99,18 +99,18 @@ export default {
   &__number {
     @include polaris-input;
     width: 56px;
-    font-size: 13px;
+    font-size: var(--p-font-size-300);
     text-align: center;
-    padding: 4px 6px;
+    padding: var(--p-space-100) var(--p-space-150);
   }
 
   &__select {
     @include polaris-select;
-    font-size: 12px;
+    font-size: var(--p-font-size-275);
     width: auto;
     min-width: 0;
-    padding: 4px 22px 4px 8px;
-    background-position: right 4px center;
+    padding: var(--p-space-100) 22px var(--p-space-100) var(--p-space-200);
+    background-position: right var(--p-space-100) center;
   }
 
   &__remove {
@@ -118,8 +118,8 @@ export default {
     background: none;
     color: var(--p-color-text-critical);
     cursor: pointer;
-    font-size: 14px;
-    padding: 2px 4px;
+    font-size: var(--p-font-size-325);
+    padding: var(--p-space-050) var(--p-space-100);
     margin-left: auto;
     flex-shrink: 0;
     opacity: 0.6;
@@ -132,7 +132,7 @@ export default {
   background: none;
   border: none;
   color: var(--p-color-text-brand);
-  font-size: 13px;
+  font-size: var(--p-font-size-300);
   font-weight: var(--p-font-weight-medium);
   cursor: pointer;
   padding: var(--p-space-100) var(--p-space-200);
