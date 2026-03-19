@@ -4,18 +4,10 @@
       <!-- Header -->
       <PolarisInline gap="200" blockAlign="center" align="space-between">
         <PolarisText variant="headingSm">Condition Builder</PolarisText>
-        <PolarisButtonGroup segmented>
-          <PolarisButton
-            :pressed="config?.match === 'all'"
-            @click="emitUpdate({ ...config, match: 'all' })"
-            size="slim"
-          >All (AND)</PolarisButton>
-          <PolarisButton
-            :pressed="config?.match === 'any'"
-            @click="emitUpdate({ ...config, match: 'any' })"
-            size="slim"
-          >Any (OR)</PolarisButton>
-        </PolarisButtonGroup>
+        <div class="seg-pill">
+          <button class="seg-pill__btn" :class="{ 'seg-pill__btn--active': config?.match === 'all' }" @click="emitUpdate({ ...config, match: 'all' })">All (AND)</button>
+          <button class="seg-pill__btn" :class="{ 'seg-pill__btn--active': config?.match === 'any' }" @click="emitUpdate({ ...config, match: 'any' })">Any (OR)</button>
+        </div>
       </PolarisInline>
 
       <!-- Groups -->
@@ -30,18 +22,10 @@
               <PolarisText variant="bodyMd">Group {{ gIdx + 1 }}</PolarisText>
             </div>
             <div class="cond-group__header-right">
-              <PolarisButtonGroup segmented>
-                <PolarisButton
-                  :pressed="group?.operator === 'AND'"
-                  @click="updateGroupOperator(group.id, 'AND')"
-                  size="slim"
-                >AND</PolarisButton>
-                <PolarisButton
-                  :pressed="group?.operator === 'OR'"
-                  @click="updateGroupOperator(group.id, 'OR')"
-                  size="slim"
-                >OR</PolarisButton>
-              </PolarisButtonGroup>
+              <div class="seg-pill">
+                <button class="seg-pill__btn" :class="{ 'seg-pill__btn--active': group?.operator === 'AND' }" @click="updateGroupOperator(group.id, 'AND')">AND</button>
+                <button class="seg-pill__btn" :class="{ 'seg-pill__btn--active': group?.operator === 'OR' }" @click="updateGroupOperator(group.id, 'OR')">OR</button>
+              </div>
               <PolarisButton variant="plain" icon="close" iconOnly @click="removeGroup(group.id)" />
             </div>
           </div>
@@ -58,16 +42,10 @@
 
             <!-- Mode toggle (only if collection supports aggregate) -->
             <div v-if="collectionSupportsAggregate(group?.collection)" class="condition-mode-toggle">
-              <PolarisButtonGroup segmented>
-                <PolarisButton
-                  :pressed="getGroupType(group) === 'simple'"
-                  @click="updateGroupType(group.id, 'simple')"
-                >Check single record</PolarisButton>
-                <PolarisButton
-                  :pressed="getGroupType(group) === 'aggregate'"
-                  @click="updateGroupType(group.id, 'aggregate')"
-                >Check aggregate</PolarisButton>
-              </PolarisButtonGroup>
+              <div class="seg-pill">
+                <button class="seg-pill__btn" :class="{ 'seg-pill__btn--active': getGroupType(group) === 'simple' }" @click="updateGroupType(group.id, 'simple')">Check single record</button>
+                <button class="seg-pill__btn" :class="{ 'seg-pill__btn--active': getGroupType(group) === 'aggregate' }" @click="updateGroupType(group.id, 'aggregate')">Check aggregate</button>
+              </div>
             </div>
 
             <!-- ═══ SIMPLE MODE ═══ -->
@@ -241,7 +219,6 @@ import {
   PolarisTextField,
   PolarisSelect,
   PolarisButton,
-  PolarisButtonGroup,
   PolarisText,
 } from 'polaris-weweb-styles/components';
 
@@ -320,7 +297,6 @@ export default {
     PolarisTextField,
     PolarisSelect,
     PolarisButton,
-    PolarisButtonGroup,
     PolarisText,
   },
   props: {
@@ -669,6 +645,18 @@ export default {
 
 <style lang="scss" scoped>
 @import 'polaris-weweb-styles';
+
+.seg-pill {
+  @include polaris-segmented-pill;
+
+  &__btn {
+    @include polaris-segmented-pill-btn;
+
+    &--active {
+      @include polaris-segmented-pill-btn-active;
+    }
+  }
+}
 
 .cond-group {
   border: 1px solid var(--p-color-border);
