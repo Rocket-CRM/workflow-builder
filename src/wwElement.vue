@@ -1,17 +1,37 @@
 <template>
   <div class="workflow-root" :style="rootContainerStyle">
     <!-- ═══ LIST VIEW ═══ -->
-    <WorkflowList
-      v-if="currentViewLocal === 'list'"
-      :workflows="workflowsData"
-      :loading="workflowsLoading"
-      @select="openWorkflow"
-      @create="createWorkflow"
-      @toggle-status="handleWorkflowStatusToggle"
-    />
+    <div v-if="currentViewLocal === 'list'" class="workflow-list-wrap">
+      <PolarisBanner
+        v-if="loadError"
+        variant="critical"
+        title="Failed to load workflows"
+        @dismiss="dismissLoadError"
+      >
+        {{ loadError }}
+      </PolarisBanner>
+      <WorkflowList
+        :workflows="workflowsData"
+        :loading="workflowsLoading"
+        @select="openWorkflow"
+        @create="createWorkflow"
+        @toggle-status="handleWorkflowStatusToggle"
+      />
+    </div>
 
     <!-- ═══ DETAIL / BUILDER VIEW ═══ -->
     <div v-else class="workflow-builder" :style="rootStyle">
+    <!-- Error banner for builder -->
+    <PolarisBanner
+      v-if="loadError"
+      class="builder-error-banner"
+      variant="critical"
+      title="Failed to load workflow"
+      @dismiss="dismissLoadError"
+    >
+      {{ loadError }}
+    </PolarisBanner>
+
     <!-- Toolbar -->
     <div v-if="!isReadOnly" class="toolbar">
       <div class="toolbar__left">
@@ -780,11 +800,11 @@ export default {
     ];
 
     // ─── Supabase API Layer (must be before any code that references api) ──
-    const supabaseUrlData = computed(() => 'https://wkevmsedchftztoolkmi.supabase.co');
-    const supabaseAnonKeyData = computed(() => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndrZXZtc2VkY2hmdHp0b29sa21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTM2OTgsImV4cCI6MjA2NjA4OTY5OH0.bd8ELGtX8ACmk_WCxR_tIFljwyHgD3YD4PdBDpD-kSM');
+    const supabaseUrlData = computed(() => props.content?.supabaseUrl || '');
+    const supabaseAnonKeyData = computed(() => props.content?.supabaseAnonKey || '');
     const authTokenData = computed(() => props.content?.authToken || '');
 
-    const api = useSupabaseApi(authTokenData);
+    const api = useSupabaseApi(supabaseUrlData, supabaseAnonKeyData, authTokenData);
 
     // ─── List / Detail View ─────────────────────────────────────
     const { value: currentViewVar, setValue: setCurrentView } =
@@ -1079,6 +1099,16 @@ export default {
     watch(() => api.agents.value, (v) => setFetchedAgents(v || []), { deep: true });
     watch(() => api.loading.value, (v) => setApiLoading({ ...v }), { deep: true });
     watch(() => api.errors.value, (v) => setApiErrors({ ...v }), { deep: true });
+
+    const loadError = ref(null);
+    const dismissLoadError = () => { loadError.value = null; };
+
+    watch(() => api.errors.value, (errs) => {
+      const msg = errs?.workflows || errs?.workflowDetail;
+      if (msg) {
+        loadError.value = msg;
+      }
+    }, { deep: true });
 
     const deepClone = (obj) => {
       if (obj === null || obj === undefined) return obj;
@@ -2423,6 +2453,8 @@ export default {
       userListNodeId,
       userListNodeName,
       closeUserList,
+      loadError,
+      dismissLoadError,
       /* wwEditor:start */
       isEditing,
       /* wwEditor:end */
@@ -2441,6 +2473,18 @@ export default {
   height: 100%;
   min-height: 500px;
   position: relative;
+}
+
+.workflow-list-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: var(--p-space-300);
+}
+
+.builder-error-banner {
+  grid-column: 1 / -1;
+  z-index: 15;
 }
 
 .workflow-builder {
@@ -2712,26 +2756,26 @@ export default {
 
 // Shopify Flow style nodes - with shadow and selection border
 :deep(.flow-node) {
-  background: #FFFFFF;
-  border: 1px solid #E1E3E5;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: var(--p-color-bg-surface);
+  border: 1px solid var(--p-color-border);
+  border-radius: var(--p-border-radius-300);
+  box-shadow: var(--p-shadow-100);
   min-width: 180px;
   max-width: 280px;
   transition: all 0.15s ease;
   position: relative;
 
   &:hover {
-    border-color: #C9CCCF;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.06);
+    border-color: var(--p-color-border-hover);
+    box-shadow: var(--p-shadow-200);
   }
 }
 
 // Selection state - rounded border frame like Shopify Flow
 :deep(.flow-node.selected) {
-  border: 2px solid #202223;
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.06);
+  border: 2px solid var(--p-color-border-emphasis);
+  border-radius: var(--p-border-radius-300);
+  box-shadow: var(--p-shadow-200);
 }
 
 // Show action toolbar ONLY when selected (not hover)
@@ -2845,43 +2889,45 @@ export default {
 :deep(.node-stats) {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px 16px;
-  border-top: 1px solid #F1F1F1;
+  gap: var(--p-space-300);
+  padding: var(--p-space-150) var(--p-space-400);
+  background: var(--p-color-bg-surface-secondary);
+  border-bottom-left-radius: var(--p-border-radius-300);
+  border-bottom-right-radius: var(--p-border-radius-300);
   cursor: pointer;
   transition: background 0.1s ease;
   justify-content: center;
 
   &:hover {
-    background: #F6F6F7;
+    background: var(--p-color-bg-surface-hover);
   }
 }
 
 :deep(.node-stats__item) {
-  font-size: 12px;
-  color: #8C9196;
+  font-size: var(--p-font-size-275);
+  color: var(--p-color-text-secondary);
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--p-space-050);
 }
 
 :deep(.node-stats__item--waiting) {
-  color: #1E40AF;
+  color: var(--p-color-text-info);
 }
 
 // Handle styles - left/right positioning
 :deep(.flow-handle) {
   width: 10px !important;
   height: 10px !important;
-  background: #FFFFFF !important;
-  border: 2px solid #C9CCCF !important;
+  background: var(--p-color-bg-surface) !important;
+  border: 2px solid var(--p-color-border) !important;
   border-radius: 50% !important;
   transition: all 0.15s ease;
 
   &:hover {
-    background: #2C6ECB !important;
-    border-color: #2C6ECB !important;
+    background: var(--p-color-bg-fill-brand) !important;
+    border-color: var(--p-color-bg-fill-brand) !important;
     transform: scale(1.3);
   }
 }
@@ -2897,13 +2943,13 @@ export default {
 :deep(.vue-flow__handle) {
   width: 10px;
   height: 10px;
-  background: #FFFFFF;
-  border: 2px solid #C9CCCF;
+  background: var(--p-color-bg-surface);
+  border: 2px solid var(--p-color-border);
   transition: all 0.15s ease;
 
   &:hover {
-    background: #2C6ECB;
-    border-color: #2C6ECB;
+    background: var(--p-color-bg-fill-brand);
+    border-color: var(--p-color-bg-fill-brand);
     transform: scale(1.3);
   }
 }
@@ -2918,7 +2964,7 @@ export default {
 
 // Edge styles - very light, smooth bezier curve (like Shopify Flow)
 :deep(.vue-flow__edge-path) {
-  stroke: #C4C4C4 !important;
+  stroke: var(--p-color-border) !important;
   stroke-width: 1 !important;
   stroke-dasharray: 4 3 !important;
   stroke-linecap: round !important;
@@ -2940,34 +2986,34 @@ export default {
 }
 
 :deep(.vue-flow__edge.selected .vue-flow__edge-path) {
-  stroke: #2C6ECB !important;
+  stroke: var(--p-color-border-brand) !important;
   stroke-width: 1.5 !important;
 }
 
 // Arrow marker styling - very light
 :deep(.vue-flow__arrowhead) {
-  fill: #C4C4C4;
+  fill: var(--p-color-border);
 }
 
 :deep(.vue-flow__edge.selected .vue-flow__arrowhead) {
-  fill: #2C6ECB;
+  fill: var(--p-color-border-brand);
 }
 
 :deep(.react-flow__arrowhead polyline),
 :deep(.vue-flow__arrowhead polyline) {
-  stroke: #C4C4C4;
-  fill: #C4C4C4;
+  stroke: var(--p-color-border);
+  fill: var(--p-color-border);
 }
 
 // Edge labels
 :deep(.vue-flow__edge-text) {
   font-size: 11px;
-  fill: #8C9196;
+  fill: var(--p-color-text-secondary);
   font-weight: 500;
 }
 
 :deep(.vue-flow__edge-textbg) {
-  fill: #F6F6F7;
+  fill: var(--p-color-bg-surface-secondary);
   rx: 4;
   ry: 4;
 }
@@ -3014,7 +3060,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: var(--p-space-400);
   background: var(--p-color-bg-surface);
   border-bottom: 1px solid var(--p-color-border);
   flex-shrink: 0;
@@ -3023,7 +3069,7 @@ export default {
 .config-panel__header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--p-space-300);
   flex: 1;
   min-width: 0;
 }
@@ -3035,18 +3081,18 @@ export default {
   align-items: center;
   justify-content: center;
   background: var(--p-color-bg-fill);
-  border-radius: 8px;
+  border-radius: var(--p-border-radius-200);
   font-size: 18px;
   flex-shrink: 0;
 
-  &--settings { background: #F3F4F6; }
-  &--entry { background: #E0E7FF; }
-  &--condition { background: #DBEAFE; }
-  &--message { background: #D1FAE5; }
-  &--wait { background: #FEF3C7; }
-  &--api { background: #EDE9FE; }
-  &--action { background: #FCE7F3; }
-  &--agent { background: #CFFAFE; }
+  &--settings { background: var(--p-color-bg-surface-secondary); }
+  &--entry { background: var(--p-color-bg-fill-info-secondary); }
+  &--condition { background: var(--p-color-bg-fill-info-secondary); }
+  &--message { background: var(--p-color-bg-fill-success-secondary); }
+  &--wait { background: var(--p-color-bg-fill-warning-secondary); }
+  &--api { background: var(--p-color-bg-fill-magic-secondary); }
+  &--action { background: var(--p-color-bg-fill-critical-secondary); }
+  &--agent { background: var(--p-color-bg-fill-info-secondary); }
 }
 
 .config-panel__header-info {
@@ -3055,7 +3101,7 @@ export default {
 }
 
 .config-panel__type-label {
-  font-size: 12px;
+  font-size: var(--p-font-size-275);
   color: var(--p-color-text-secondary);
   display: block;
   text-transform: uppercase;
@@ -3068,8 +3114,8 @@ export default {
   background: transparent;
   padding: 0;
   outline: none;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--p-font-size-325);
+  font-weight: var(--p-font-weight-semibold);
   color: var(--p-color-text);
   line-height: 1.4;
 
@@ -3079,8 +3125,8 @@ export default {
 }
 
 .config-panel__title-static {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--p-font-size-325);
+  font-weight: var(--p-font-weight-semibold);
   color: var(--p-color-text);
   line-height: 1.4;
 }
@@ -3092,7 +3138,7 @@ export default {
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--p-border-radius-150);
   background: transparent;
   color: var(--p-color-text-secondary);
   cursor: pointer;
@@ -3140,7 +3186,7 @@ export default {
   flex-direction: column;
   background: var(--p-color-bg-surface);
   border-left: var(--p-border-width-025) solid var(--p-color-border);
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--p-shadow-400);
 }
 
 .status-panel__content {
@@ -3277,9 +3323,9 @@ export default {
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: #303030;
-  color: #FFFFFF;
-  padding: 10px 20px;
+  background: var(--p-color-bg-fill-inverse);
+  color: var(--p-color-text-inverse);
+  padding: var(--p-space-250) var(--p-space-500);
   border-radius: var(--p-border-radius-200);
   font-size: var(--p-font-size-300);
   box-shadow: var(--p-shadow-400);
