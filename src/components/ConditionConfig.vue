@@ -20,32 +20,33 @@
 
       <!-- Groups -->
       <div class="polaris-condition-list" v-if="config?.groups?.length">
-        <PolarisCard
+        <div
           v-for="(group, gIdx) in config.groups"
           :key="group?.id || gIdx"
-          subdued
+          class="cond-group"
         >
-          <PolarisCardSection>
-            <!-- Group header -->
-            <PolarisInline gap="200" blockAlign="center" align="space-between">
+          <div class="cond-group__header">
+            <div class="cond-group__header-left">
               <PolarisText variant="bodyMd">Group {{ gIdx + 1 }}</PolarisText>
-              <PolarisInline gap="200">
-                <PolarisButtonGroup segmented>
-                  <PolarisButton
-                    :pressed="group?.operator === 'AND'"
-                    @click="updateGroupOperator(group.id, 'AND')"
-                    size="slim"
-                  >AND</PolarisButton>
-                  <PolarisButton
-                    :pressed="group?.operator === 'OR'"
-                    @click="updateGroupOperator(group.id, 'OR')"
-                    size="slim"
-                  >OR</PolarisButton>
-                </PolarisButtonGroup>
-                <PolarisButton variant="plain" icon="close" iconOnly @click="removeGroup(group.id)" />
-              </PolarisInline>
-            </PolarisInline>
+            </div>
+            <div class="cond-group__header-right">
+              <PolarisButtonGroup segmented>
+                <PolarisButton
+                  :pressed="group?.operator === 'AND'"
+                  @click="updateGroupOperator(group.id, 'AND')"
+                  size="slim"
+                >AND</PolarisButton>
+                <PolarisButton
+                  :pressed="group?.operator === 'OR'"
+                  @click="updateGroupOperator(group.id, 'OR')"
+                  size="slim"
+                >OR</PolarisButton>
+              </PolarisButtonGroup>
+              <PolarisButton variant="plain" icon="close" iconOnly @click="removeGroup(group.id)" />
+            </div>
+          </div>
 
+          <div class="cond-group__body">
             <!-- Collection select -->
             <PolarisSelect
               label="Collection"
@@ -79,7 +80,7 @@
                     </div>
 
                     <div class="polaris-condition-fields">
-                      <div style="flex: 1;">
+                      <div class="cond-field cond-field--grow">
                         <PolarisSelect
                           label="Field"
                           size="small"
@@ -90,7 +91,7 @@
                         />
                       </div>
 
-                      <div style="width: 120px; flex-shrink: 0;">
+                      <div class="cond-field cond-field--operator">
                         <PolarisSelect
                           label="Operator"
                           size="small"
@@ -100,7 +101,7 @@
                         />
                       </div>
 
-                      <div v-if="isValueRequired(condition?.operator)" style="flex: 1;">
+                      <div v-if="isValueRequired(condition?.operator)" class="cond-field cond-field--grow">
                         <PolarisTextField
                           label="Value"
                           :modelValue="condition?.value || ''"
@@ -123,7 +124,7 @@
             <template v-if="getGroupType(group) === 'aggregate'">
               <!-- Function + Field -->
               <div class="polaris-condition-fields">
-                <div style="flex: 1;">
+                <div class="cond-field cond-field--grow">
                   <PolarisSelect
                     label="Function"
                     :modelValue="group?.aggregate || 'sum'"
@@ -131,7 +132,7 @@
                     :options="aggregateFunctionOptions"
                   />
                 </div>
-                <div style="flex: 1;">
+                <div class="cond-field cond-field--grow">
                   <PolarisSelect
                     label="Field"
                     :modelValue="group?.field || ''"
@@ -151,7 +152,7 @@
                     :key="filter?.id || fIdx"
                     class="polaris-condition-fields"
                   >
-                    <div style="flex: 1;">
+                    <div class="cond-field cond-field--grow">
                       <PolarisSelect
                         labelHidden
                         label="Field"
@@ -162,7 +163,7 @@
                         placeholder="Field..."
                       />
                     </div>
-                    <div style="width: 120px; flex-shrink: 0;">
+                    <div class="cond-field cond-field--operator">
                       <PolarisSelect
                         labelHidden
                         label="Operator"
@@ -172,7 +173,7 @@
                         :options="getOperatorOptions(group?.collection, filter?.field)"
                       />
                     </div>
-                    <div v-if="isValueRequired(filter?.operator)" style="flex: 1;">
+                    <div v-if="isValueRequired(filter?.operator)" class="cond-field cond-field--grow">
                       <PolarisTextField
                         labelHidden
                         label="Value"
@@ -196,7 +197,7 @@
 
               <!-- Threshold -->
               <div class="polaris-condition-fields">
-                <div style="width: 120px; flex-shrink: 0;">
+                <div class="cond-field cond-field--operator">
                   <PolarisSelect
                     label="Threshold"
                     :modelValue="group?.operator || 'gte'"
@@ -204,7 +205,7 @@
                     :options="thresholdOperatorOptions"
                   />
                 </div>
-                <div style="flex: 1;">
+                <div class="cond-field cond-field--grow">
                   <PolarisTextField
                     label="Value"
                     type="number"
@@ -214,8 +215,8 @@
                 </div>
               </div>
             </template>
-          </PolarisCardSection>
-        </PolarisCard>
+          </div>
+        </div>
       </div>
 
       <!-- Empty state -->
@@ -669,11 +670,46 @@ export default {
 <style lang="scss" scoped>
 @import 'polaris-weweb-styles';
 
+.cond-group {
+  border: 1px solid var(--p-color-border);
+  border-radius: var(--p-border-radius-300);
+  background: var(--p-color-bg-surface);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--p-space-200) var(--p-space-300);
+    background: var(--p-color-bg-surface);
+    border-bottom: 1px solid var(--p-color-border);
+  }
+
+  &__header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--p-space-200);
+  }
+
+  &__header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--p-space-200);
+  }
+
+  &__body {
+    padding: var(--p-space-400);
+    display: flex;
+    flex-direction: column;
+    gap: var(--p-space-400);
+  }
+}
+
 .polaris-condition-list {
   @include polaris-tokens;
   display: flex;
   flex-direction: column;
-  gap: var(--p-space-200);
+  gap: var(--p-space-300);
   margin-top: var(--p-space-300);
 }
 
@@ -694,6 +730,7 @@ export default {
   display: flex;
   gap: var(--p-space-200);
   align-items: flex-end;
+  width: 100%;
 
   > div { min-width: 0; }
 
@@ -707,6 +744,12 @@ export default {
     height: 36px;
     box-sizing: border-box;
   }
+}
+
+.cond-field {
+  min-width: 0;
+  &--grow { flex: 1; }
+  &--operator { width: 160px; flex-shrink: 0; }
 }
 
 .condition-mode-toggle {
