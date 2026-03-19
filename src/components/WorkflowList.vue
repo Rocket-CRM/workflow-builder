@@ -285,10 +285,10 @@ export default {
   background: var(--p-color-bg-fill-secondary);
   color: var(--p-color-text-secondary);
 
-  &--audience_entered { background: #EDE9FE; color: #6D28D9; }
-  &--wallet_ledger { background: #DBEAFE; color: #1D4ED8; }
-  &--purchase_ledger { background: #D1FAE5; color: #065F46; }
-  &--user_accounts { background: #FEF3C7; color: #92400E; }
+  &--audience_entered { background: var(--p-color-bg-fill-magic-secondary); color: var(--p-color-text-magic); }
+  &--wallet_ledger { background: var(--p-color-bg-fill-info-secondary); color: var(--p-color-text-info); }
+  &--purchase_ledger { background: var(--p-color-bg-fill-success-secondary); color: var(--p-color-text-success); }
+  &--user_accounts { background: var(--p-color-bg-fill-warning-secondary); color: var(--p-color-text-warning); }
 }
 
 .status-toggle {
