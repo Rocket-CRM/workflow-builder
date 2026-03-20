@@ -82,7 +82,7 @@
             draggable="true"
             @dragstart="onDragStart($event, nodeType)"
           >
-            <span class="palette-item__icon" :style="{ '--icon-bg': (nodeType.color || getNodeColor(nodeType.type)) + '14', '--icon-color': nodeType.color || getNodeColor(nodeType.type) }">{{ nodeType.icon }}</span>
+            <span class="palette-item__icon"><img :src="nodeType.icon" class="palette-icon-img" /></span>
             <div class="palette-item__text">
               <span class="palette-item__label">{{ nodeType.label }}</span>
               <span v-if="nodeType.desc" class="palette-item__desc">{{ nodeType.desc }}</span>
@@ -97,7 +97,7 @@
         <div class="config-panel__header">
           <div class="config-panel__header-left">
           <span class="config-panel__icon" :class="`config-panel__icon--${isEditingEntry ? 'entry' : editingNodeType}`">
-            {{ isEditingEntry ? '🎯' : (nodeIconMap[editingNodeType] || '⚙️') }}
+            <img :src="isEditingEntry ? ICON_URLS.entry : (nodeIconMap[editingNodeType] || ICON_URLS.settings)" class="config-icon-img" />
             </span>
             <div class="config-panel__header-info">
               <span class="config-panel__type-label">{{ isEditingEntry ? 'Entry Condition' : (nodeTypeLabels[editingNodeType] || 'Node') }}</span>
@@ -179,7 +179,7 @@
       <div v-else-if="settingsPanelOpen" class="config-panel">
         <div class="config-panel__header">
           <div class="config-panel__header-left">
-            <span class="config-panel__icon config-panel__icon--settings">⚙️</span>
+            <span class="config-panel__icon config-panel__icon--settings"><img :src="ICON_URLS.settings" class="config-icon-img" /></span>
             <div class="config-panel__header-info">
               <span class="config-panel__type-label">Workflow</span>
               <span class="config-panel__title-static">Settings</span>
@@ -420,8 +420,43 @@ const createNodeActions = (props, showEdit, showDelete) => {
   return h('div', { class: 'node-actions-toolbar' }, actions);
 };
 
+// ─── Icon URL mapping: Supabase-hosted SVG icons ───
+const ICON_BASE = 'https://wkevmsedchftztoolkmi.supabase.co/storage/v1/object/public/default%20images';
+
+const ICON_URLS = {
+  entry: `${ICON_BASE}/icon_New Condition.svg`,
+  audience: `${ICON_BASE}/icon_Audience.svg`,
+  custom_condition: `${ICON_BASE}/icon_Custom Condition.svg`,
+  send_line: `${ICON_BASE}/icon_Line Message.svg`,
+  send_sms: `${ICON_BASE}/icon_SMS.svg`,
+  award_currency: `${ICON_BASE}/icon_Award Currency.svg`,
+  assign_tag: `${ICON_BASE}/icon_Assign Tag.svg`,
+  remove_tag: `${ICON_BASE}/icon_Remove Tag.svg`,
+  assign_persona: `${ICON_BASE}/icon_Assign persona.svg`,
+  assign_earn_factor: `${ICON_BASE}/icon_Earn Factor.svg`,
+  submit_form: `${ICON_BASE}/icon_Submit Form.svg`,
+  add_to_audience: `${ICON_BASE}/icon_Add to Audience.svg`,
+  remove_from_audience: `${ICON_BASE}/icon_Remove from Audience.svg`,
+  api_call: `${ICON_BASE}/icon_Webhook.svg`,
+  condition: `${ICON_BASE}/icon_Conditional Split.svg`,
+  wait: `${ICON_BASE}/icon_Time Delay.svg`,
+  agent: `${ICON_BASE}/icon_AI Agent.svg`,
+  settings: `${ICON_BASE}/icon_Deliberation Settings-.svg`,
+  message: `${ICON_BASE}/icon_SMS.svg`,
+  api: `${ICON_BASE}/icon_Webhook.svg`,
+  action: `${ICON_BASE}/icon_New Condition.svg`,
+  test: `${ICON_BASE}/icon_New Condition.svg`,
+};
+
+const getIconUrl = (nodeType, actionType) => {
+  if (actionType && ICON_URLS[actionType]) return ICON_URLS[actionType];
+  return ICON_URLS[nodeType] || ICON_URLS.entry;
+};
+
+const iconImg = (src, size = 32) => h('img', { src, style: `width:${size}px;height:${size}px;object-fit:contain;` });
+
 // Helper to create node body with optional type subtitle
-const createNodeBody = (label, icon, badgeColor, typeSubtitle) => {
+const createNodeBody = (label, iconSrc, badgeColor, typeSubtitle) => {
   const children = [];
   const textChildren = [];
   if (typeSubtitle) {
@@ -429,7 +464,7 @@ const createNodeBody = (label, icon, badgeColor, typeSubtitle) => {
   }
   textChildren.push(h('span', { class: 'node-label' }, label));
   children.push(h('div', { class: 'node-label-group' }, textChildren));
-  children.push(h('div', { class: 'node-icon-badge', style: { '--badge-color': badgeColor } }, icon));
+  children.push(h('div', { class: 'node-icon-badge' }, [iconImg(iconSrc)]));
   return h('div', { class: 'node-body' }, children);
 };
 
@@ -457,15 +492,15 @@ const createNodeStats = (props, isWaitNode = false) => {
   }, items);
 };
 
-// Node icon mapping
+// Node icon URL mapping (used by config panel header)
 const nodeIconMap = {
-  condition: '🔀',
-  message: '✉️',
-  wait: '⏱️',
-  api: '🔌',
-  action: '⚡',
-  agent: '🤖',
-  test: '🧪',
+  condition: ICON_URLS.condition,
+  message: ICON_URLS.message,
+  wait: ICON_URLS.wait,
+  api: ICON_URLS.api,
+  action: ICON_URLS.action,
+  agent: ICON_URLS.agent,
+  test: ICON_URLS.test,
 };
 
 const nodeTypeLabels = {
@@ -498,7 +533,7 @@ const ConditionNode = {
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           createNodeBody(
             props.data?.label || 'Condition',
-            '🔀',
+            ICON_URLS.condition,
             props.data?.color || 'var(--wf-node-condition)',
             null
           ),
@@ -541,7 +576,7 @@ const MessageNode = {
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Send Message'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || 'var(--wf-node-message)' } }, '✉️'),
+            h('div', { class: 'node-icon-badge' }, [iconImg(getIconUrl('message', props.data?.action_type))]),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props),
@@ -569,7 +604,7 @@ const WaitNode = {
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Wait'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || 'var(--wf-node-wait)' } }, '⏱️'),
+            h('div', { class: 'node-icon-badge' }, [iconImg(ICON_URLS.wait)]),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props, true),
@@ -597,7 +632,7 @@ const ApiNode = {
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'API Call'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || 'var(--wf-node-api)' } }, '🔌'),
+            h('div', { class: 'node-icon-badge' }, [iconImg(ICON_URLS.api)]),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props),
@@ -626,7 +661,7 @@ const ActionNode = {
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Action'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || 'var(--wf-node-action)' } }, '⚡'),
+            h('div', { class: 'node-icon-badge' }, [iconImg(getIconUrl('action', props.data?.action_type))]),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
           createNodeStats(props),
@@ -654,7 +689,7 @@ const TestNode = {
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, 'TEST - ' + (props.data?.label || 'Working!')),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': 'var(--wf-node-action)' } }, '🧪'),
+            h('div', { class: 'node-icon-badge' }, [iconImg(ICON_URLS.test)]),
           ]),
           h(Handle, { type: 'source', position: Position.Right, id: 'output', class: 'flow-handle flow-handle-right' }),
         ]
@@ -682,7 +717,7 @@ const AgentNode = {
           h(Handle, { type: 'target', position: Position.Left, id: 'input', class: 'flow-handle flow-handle-left' }),
           h('div', { class: 'node-body' }, [
             h('span', { class: 'node-label' }, props.data?.label || 'Agent'),
-            h('div', { class: 'node-icon-badge', style: { '--badge-color': props.data?.color || 'var(--wf-node-agent)' } }, '🤖'),
+            h('div', { class: 'node-icon-badge' }, [iconImg(ICON_URLS.agent)]),
           ]),
           h(Handle, {
             type: 'source',
@@ -773,40 +808,40 @@ export default {
       {
         label: 'Messages',
         nodes: [
-          { type: 'action', subType: 'send_line', label: 'LINE Message', desc: 'Send a LINE message to the user', icon: '💬', color: '#06C755' /* LINE brand color */ },
-          { type: 'action', subType: 'send_sms', label: 'SMS', desc: 'Send an SMS text message', icon: '📱', color: '#008060' /* --p-color-bg-fill-success */ },
+          { type: 'action', subType: 'send_line', label: 'LINE Message', desc: 'Send a LINE message to the user', icon: ICON_URLS.send_line, color: '#06C755' },
+          { type: 'action', subType: 'send_sms', label: 'SMS', desc: 'Send an SMS text message', icon: ICON_URLS.send_sms, color: '#008060' },
         ],
       },
       {
         label: 'Loyalty',
         nodes: [
-          { type: 'action', subType: 'award_currency', label: 'Award Currency', desc: 'Give points or tickets', icon: '🪙', color: '#B98900' /* --p-color-bg-fill-warning */ },
-          { type: 'action', subType: 'assign_tag', label: 'Assign Tag', desc: 'Add a tag to the user', icon: '🏷️', color: '#B98900' /* --p-color-bg-fill-warning */ },
-          { type: 'action', subType: 'remove_tag', label: 'Remove Tag', desc: 'Remove a tag from the user', icon: '🏷️', color: '#D82C0D' /* --p-color-bg-fill-critical */ },
-          { type: 'action', subType: 'assign_persona', label: 'Assign Persona', desc: 'Set the user persona', icon: '👤', color: '#B98900' /* --p-color-bg-fill-warning */ },
-          { type: 'action', subType: 'assign_earn_factor', label: 'Earn Factor', desc: 'Assign a time-limited earn factor', icon: '✨', color: '#B98900' /* --p-color-bg-fill-warning */ },
-          { type: 'action', subType: 'submit_form', label: 'Submit Form', desc: 'Auto-submit a form for the user', icon: '📋', color: '#B98900' /* --p-color-bg-fill-warning */ },
+          { type: 'action', subType: 'award_currency', label: 'Award Currency', desc: 'Give points or tickets', icon: ICON_URLS.award_currency, color: '#B98900' },
+          { type: 'action', subType: 'assign_tag', label: 'Assign Tag', desc: 'Add a tag to the user', icon: ICON_URLS.assign_tag, color: '#B98900' },
+          { type: 'action', subType: 'remove_tag', label: 'Remove Tag', desc: 'Remove a tag from the user', icon: ICON_URLS.remove_tag, color: '#D82C0D' },
+          { type: 'action', subType: 'assign_persona', label: 'Assign Persona', desc: 'Set the user persona', icon: ICON_URLS.assign_persona, color: '#B98900' },
+          { type: 'action', subType: 'assign_earn_factor', label: 'Earn Factor', desc: 'Assign a time-limited earn factor', icon: ICON_URLS.assign_earn_factor, color: '#B98900' },
+          { type: 'action', subType: 'submit_form', label: 'Submit Form', desc: 'Auto-submit a form for the user', icon: ICON_URLS.submit_form, color: '#B98900' },
         ],
       },
       {
         label: 'Audience',
         nodes: [
-          { type: 'action', subType: 'add_to_audience', label: 'Add to Audience', desc: 'Add the user to an audience', icon: '👥', color: '#7B61FF' /* --p-color-bg-fill-magic */ },
-          { type: 'action', subType: 'remove_from_audience', label: 'Remove from Audience', desc: 'Remove the user from an audience', icon: '🚪', color: '#B98900' /* --p-color-bg-fill-warning */ },
+          { type: 'action', subType: 'add_to_audience', label: 'Add to Audience', desc: 'Add the user to an audience', icon: ICON_URLS.add_to_audience, color: '#7B61FF' },
+          { type: 'action', subType: 'remove_from_audience', label: 'Remove from Audience', desc: 'Remove the user from an audience', icon: ICON_URLS.remove_from_audience, color: '#B98900' },
         ],
       },
       {
         label: 'Integration',
         nodes: [
-          { type: 'action', subType: 'api_call', label: 'Webhook', desc: 'Call an external API', icon: '🔗', color: '#7B61FF' /* --p-color-bg-fill-magic */ },
+          { type: 'action', subType: 'api_call', label: 'Webhook', desc: 'Call an external API', icon: ICON_URLS.api_call, color: '#7B61FF' },
         ],
       },
       {
         label: 'Logic',
         nodes: [
-          { type: 'wait', label: 'Time Delay', desc: 'Wait before continuing', icon: '⏱️', color: '#B98900' /* --p-color-bg-fill-warning */ },
-          { type: 'condition', label: 'Conditional Split', desc: 'Branch based on conditions', icon: '🔀', color: '#2C6ECB' /* --p-color-bg-fill-brand */ },
-          { type: 'agent', label: 'AI Agent', desc: 'Let AI decide the next action', icon: '🤖', color: '#005BD3' /* --p-color-bg-fill-info */ /* TODO: map to Polaris token */ },
+          { type: 'wait', label: 'Time Delay', desc: 'Wait before continuing', icon: ICON_URLS.wait, color: '#B98900' },
+          { type: 'condition', label: 'Conditional Split', desc: 'Branch based on conditions', icon: ICON_URLS.condition, color: '#2C6ECB' },
+          { type: 'agent', label: 'AI Agent', desc: 'Let AI decide the next action', icon: ICON_URLS.agent, color: '#005BD3' },
         ],
       },
     ];
@@ -2434,6 +2469,7 @@ export default {
       isEditingEntry,
       nodeTypeLabels,
       nodeIconMap,
+      ICON_URLS,
       collectionsData,
       channelsData,
       messageTemplatesData,
@@ -2720,11 +2756,15 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
     flex-shrink: 0;
     border-radius: var(--p-border-radius-200);
-    background: var(--icon-bg, var(--p-color-bg-fill-secondary));
-    color: var(--icon-color, var(--p-color-text));
+    overflow: hidden;
+
+    .palette-icon-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
   }
 
   &__text {
@@ -2861,10 +2901,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--badge-color, var(--p-color-bg-fill-brand)) 15%, white);
   border-radius: var(--p-border-radius-200);
-  font-size: 16px;
   flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 }
 
 // Node actions toolbar (appears on hover) - using Polaris card style
@@ -3114,19 +3159,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--p-color-bg-fill);
   border-radius: var(--p-border-radius-200);
-  font-size: 18px;
   flex-shrink: 0;
+  overflow: hidden;
 
-  &--settings { background: var(--p-color-bg-surface-secondary); }
-  &--entry { background: var(--p-color-bg-fill-info-secondary); }
-  &--condition { background: var(--p-color-bg-fill-info-secondary); }
-  &--message { background: var(--p-color-bg-fill-success-secondary); }
-  &--wait { background: var(--p-color-bg-fill-warning-secondary); }
-  &--api { background: var(--p-color-bg-fill-magic-secondary); }
-  &--action { background: var(--p-color-bg-fill-critical-secondary); }
-  &--agent { background: var(--p-color-bg-fill-info-secondary); }
+  .config-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 }
 
 .config-panel__header-info {
