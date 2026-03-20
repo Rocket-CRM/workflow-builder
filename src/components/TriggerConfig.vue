@@ -9,7 +9,7 @@
         <label class="entry-type-option" :class="{ 'entry-type-option--active': entryType === 'audience' }">
           <input type="radio" value="audience" :checked="entryType === 'audience'" @change="switchEntryType('audience')" />
           <div class="entry-type-option__content">
-            <span class="entry-type-option__icon">👥</span>
+            <span class="entry-type-option__icon"><img :src="ICON_URLS.audience" class="entry-type-icon-img" /></span>
             <div>
               <span class="entry-type-option__title">Audience</span>
               <span class="entry-type-option__desc">Users who enter a specific audience</span>
@@ -19,7 +19,7 @@
         <label class="entry-type-option" :class="{ 'entry-type-option--active': entryType === 'condition' }">
           <input type="radio" value="condition" :checked="entryType === 'condition'" @change="switchEntryType('condition')" />
           <div class="entry-type-option__content">
-            <span class="entry-type-option__icon">🔀</span>
+            <span class="entry-type-option__icon"><img :src="ICON_URLS.custom_condition" class="entry-type-icon-img" /></span>
             <div>
               <span class="entry-type-option__title">Custom condition</span>
               <span class="entry-type-option__desc">Users who match specific criteria</span>
@@ -74,6 +74,12 @@ import {
   PolarisCard,
   PolarisCardSection,
 } from 'polaris-weweb-styles/components';
+
+const ICON_BASE = 'https://wkevmsedchftztoolkmi.supabase.co/storage/v1/object/public/default%20images';
+const ICON_URLS = {
+  audience: `${ICON_BASE}/icon_Audience.svg`,
+  custom_condition: `${ICON_BASE}/icon_Custom Condition.svg`,
+};
 
 export default {
   name: 'TriggerConfig',
@@ -156,6 +162,7 @@ export default {
     };
 
     return {
+      ICON_URLS,
       entryType,
       activeAudiences,
       audienceOptions,
@@ -231,7 +238,21 @@ export default {
     flex: 1;
   }
 
-  &__icon { font-size: 18px; flex-shrink: 0; line-height: 1.2; }
+  &__icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    .entry-type-icon-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
 
   &__title {
     display: block;
