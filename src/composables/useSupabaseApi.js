@@ -1,14 +1,18 @@
 import { ref, computed, watch } from 'vue';
 
-const SUPABASE_URL = 'https://wkevmsedchftztoolkmi.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndrZXZtc2VkY2hmdHp0b29sa21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTM2OTgsImV4cCI6MjA2NjA4OTY5OH0.bd8ELGtX8ACmk_WCxR_tIFljwyHgD3YD4PdBDpD-kSM';
+const DEFAULT_SUPABASE_URL = 'https://wkevmsedchftztoolkmi.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndrZXZtc2VkY2hmdHp0b29sa21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTM2OTgsImV4cCI6MjA2NjA4OTY5OH0.bd8ELGtX8ACmk_WCxR_tIFljwyHgD3YD4PdBDpD-kSM';
 
 /**
  * Centralized Supabase API layer for the Workflow Builder.
  * Self-fetches all required data (workflows, collections, audiences, agents, action options).
- * Supabase URL and anon key are hardcoded; only authToken is required from the caller.
+ * Accepts optional supabaseUrl and supabaseAnonKey refs/computeds; falls back to hardcoded defaults.
  */
-export function useSupabaseApi(authToken) {
+export function useSupabaseApi(supabaseUrl, supabaseAnonKey, authToken) {
+  const getUrl = () => supabaseUrl?.value || DEFAULT_SUPABASE_URL;
+  const getAnonKey = () => supabaseAnonKey?.value || DEFAULT_SUPABASE_ANON_KEY;
+  const getToken = () => authToken?.value || '';
+
   const workflows = ref([]);
   const workflowDetail = ref(null);
   const collections = ref([]);
@@ -28,8 +32,6 @@ export function useSupabaseApi(authToken) {
 
   const errors = ref({});
 
-  const getToken = () => authToken.value || '';
-
   const isReady = computed(() => !!getToken());
 
   // ─── Core fetch helpers ────────────────────────────────
@@ -38,12 +40,12 @@ export function useSupabaseApi(authToken) {
     const token = getToken();
     if (!token) return null;
 
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functionName}`, {
+    const res = await fetch(`${getUrl()}/rest/v1/rpc/${functionName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
-        'apikey': SUPABASE_ANON_KEY,
+        'apikey': getAnonKey(),
       },
       body: JSON.stringify(body),
     });
@@ -60,10 +62,10 @@ export function useSupabaseApi(authToken) {
     const token = getToken();
     if (!token) return null;
 
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query ? '?' + query : ''}`, {
+    const res = await fetch(`${getUrl()}/rest/v1/${table}${query ? '?' + query : ''}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'apikey': SUPABASE_ANON_KEY,
+        'apikey': getAnonKey(),
       },
     });
 
@@ -79,7 +81,7 @@ export function useSupabaseApi(authToken) {
     const token = getToken();
     if (!token) return null;
 
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/${functionName}`, {
+    const res = await fetch(`${getUrl()}/functions/v1/${functionName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
