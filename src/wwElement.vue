@@ -787,20 +787,19 @@ export default {
       test: markRaw(TestNode),
     };
 
-    // Default edge options - very light, smooth bezier curve like Shopify Flow
     const defaultEdgeOptions = {
       type: 'default',
       animated: true,
       style: { 
-        stroke: 'var(--p-color-border)', 
-        strokeWidth: 1,
-        strokeDasharray: '4 3',
+        stroke: 'var(--p-color-icon-secondary)',
+        strokeWidth: 2,
+        strokeDasharray: '6 4',
       },
       markerEnd: {
         type: 'arrowclosed',
-        color: '#E1E3E5' /* --p-color-border */,
-        width: 12,
-        height: 12,
+        color: '#6D7175',
+        width: 16,
+        height: 16,
       },
     };
 
@@ -3041,16 +3040,14 @@ export default {
   right: -6px;
 }
 
-// Edge styles - very light, smooth bezier curve (like Shopify Flow)
 :deep(.vue-flow__edge-path) {
-  stroke: var(--p-color-border) !important;
-  stroke-width: 1 !important;
-  stroke-dasharray: 4 3 !important;
+  stroke: var(--p-color-icon-secondary) !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: 6 4 !important;
   stroke-linecap: round !important;
   fill: none !important;
 }
 
-// Animated flow effect (very subtle)
 :deep(.vue-flow__edge.animated .vue-flow__edge-path) {
   animation: flow-animation 2.5s linear infinite;
 }
@@ -3066,12 +3063,11 @@ export default {
 
 :deep(.vue-flow__edge.selected .vue-flow__edge-path) {
   stroke: var(--p-color-border-brand) !important;
-  stroke-width: 1.5 !important;
+  stroke-width: 2.5 !important;
 }
 
-// Arrow marker styling - very light
 :deep(.vue-flow__arrowhead) {
-  fill: var(--p-color-border);
+  fill: var(--p-color-icon-secondary);
 }
 
 :deep(.vue-flow__edge.selected .vue-flow__arrowhead) {
@@ -3080,8 +3076,8 @@ export default {
 
 :deep(.react-flow__arrowhead polyline),
 :deep(.vue-flow__arrowhead polyline) {
-  stroke: var(--p-color-border);
-  fill: var(--p-color-border);
+  stroke: var(--p-color-icon-secondary);
+  fill: var(--p-color-icon-secondary);
 }
 
 // Edge labels
